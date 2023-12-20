@@ -15,7 +15,7 @@ export async function run(): Promise<void> {
 
     return await Api.forkInputs(inputs);
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) core.setFailed(error.message);
   }
 }
 
