@@ -51,25 +51,25 @@ jobs:
           repo: 'gear-tech/fork-action'
           ref: ${{ github.head_ref || github.ref_name }}
 
-    dispatch-and-fork:
-      name: GitHub Actions Test
-      runs-on: ubuntu-latest
-      if: github.event_name == 'pull_request'
-      steps:
-        - name: Checkout
-          id: checkout
-          uses: actions/checkout@v4
+  dispatch-and-fork:
+    name: GitHub Actions Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
 
-        - name: Fork running workflow
-          uses: ./
-          with:
-            token: ${{ secrets.GITHUB_TOKEN }}
-            workflow_id: '.github/workflows/dispatch.yml'
-            jobs: '["dispatch"]'
-            head_sha: ${{ github.event.pull_request.head.sha }}
-            repo: 'gear-tech/fork-action'
-            ref: ${{ github.head_ref || github.ref_name }}
-            prefix: 'build / '
-            inputs:
-              '{ "title": ${{ github.event.pull_request.title }}, "number":
-              ${{github.event.number }} }'
+      - name: Fork running workflow
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: '.github/workflows/dispatch.yml'
+          jobs: '["dispatch"]'
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          repo: 'gear-tech/fork-action'
+          ref: ${{ github.head_ref || github.ref_name }}
+          prefix: 'build / '
+          inputs:
+            '{ "title": ${{ github.event.pull_request.title }}, "number":
+            ${{github.event.number }} }'
