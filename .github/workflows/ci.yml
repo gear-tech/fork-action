@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   test-typescript:
     name: TypeScript Tests
@@ -50,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow_id: '.github/workflows/check-dist.yml'
-          jobs: ['Diff']
+          jobs: '["Diff"]'
           head_sha: ${{ github.event.pull_request.head.sha }}
           repo: 'gear-tech/fork-action'
           ref: ${{ github.head_ref || github.ref_name }}

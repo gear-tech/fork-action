@@ -11,6 +11,10 @@ permissions:
   packages: read
   statuses: write
 
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint Codebase
