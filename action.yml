@@ -1,24 +1,28 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Gear tech fork action.'
+description: 'Fork checks from workflow run.'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
-branding:
-  icon: 'heart'
-  color: 'red'
-
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  workflow_id:
+    description: 'The ID of the target workflow.'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  jobs:
+    description: 'The jobs to be forked from the jobs of target workflow.'
+    required: true
+  head_sha:
+    description: 'The target commit that creates checks on.'
+    required: true
+  repo:
+    description: 'The full name of the github repo.'
+    required: true
+    default: 'gear-tech/gear'
+  ref:
+    description: 'The git reference of the target workflow.'
+    required: true
+    default: 'master'
+  token:
+    description: 'The github token to trigger this action.'
+    default: ${{ secrets.GITHUB_TOKEN }}
 
 runs:
-  using: node20
+  using: node18
   main: dist/index.js

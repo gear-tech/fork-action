@@ -5,6 +5,7 @@ import core from "@actions/core";
 import github from "@actions/github";
 import { GitHub } from '@actions/github/lib/utils';
 import {
+    Inputs, ForkOptions,
     CheckRun, Conclusion, Job, Status,
     WorkflowId, WorkflowInputs, WorkflowRun,
 } from "@/types";
@@ -13,7 +14,7 @@ import { wait } from "@/utils";
 /**
  * API wrapper for the fork action and related usages.
  */
-export class Api {
+export default class Api {
     // Github organization.
     owner: string;
     // Github repo.
@@ -28,22 +29,29 @@ export class Api {
     }
 
     /**
-     *  Fork checks from workflow run.
+     * Fork checks from inputs.
      *
-     * @param {string} ref - the git reference of the workflow.
-     * @param {WorkflowId} workflow_id - The ID of the workflow.
-     * @param {WorkflowInputs} inputs - Inputs of the workflow.
-     * @param {string[]} jobs - The jobs to be forked.
-     * @param {string} head_sha - The commit hash to fork.
+     * @param {Inputs} inputs - overall inputs for the fork process.
      * @returns {Promise<void>}
      */
-    public async fork(
-        ref: string,
-        workflow_id: WorkflowId,
-        inputs: WorkflowInputs,
-        jobs: string[],
-        head_sha: string,
-    ): Promise<void> {
+    static async forkInputs(inputs: Inputs): Promise<void> {
+        const api = new Api(inputs.owner, inputs.repo);
+        await api.fork(inputs);
+    }
+
+    /**
+     *  Fork checks from workflow run.
+     *
+     * @params {ForkOptions} - The fork options.
+     * @returns {Promise<void>}
+     */
+    public async fork({
+        ref,
+        workflow_id,
+        inputs,
+        jobs,
+        head_sha,
+    }: ForkOptions): Promise<void> {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);

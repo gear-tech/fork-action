@@ -27,3 +27,22 @@ export type WorkflowInputs = operations["actions/create-workflow-dispatch"]["req
 
 /// Workflow run schema.
 export type WorkflowRun = components["schemas"]["workflow-run"];
+
+export interface ForkOptions {
+    // the git reference of the workflow.
+    ref: string;
+    // The ID of the workflow.
+    workflow_id: WorkflowId;
+    // Inputs of the workflow.
+    inputs: WorkflowInputs,
+    // The jobs to be forked.
+    jobs: string[];
+    // The commit hash to fork.
+    head_sha: string;
+}
+
+/// Unpacked action inputs.
+export interface Inputs extends ForkOptions {
+    owner: string;
+    repo: string;
+}
