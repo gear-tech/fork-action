@@ -81,6 +81,10 @@ export default class Api {
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await this.getJobs(run.id, jobs);
+      if (_jobs.length === 0) {
+        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+      }
+
       const _checks = await Promise.all(
         _jobs.map(async job => {
           const check = checks[job.name];

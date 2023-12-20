@@ -47,7 +47,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow_id: '.github/workflows/check-dist.yml'
-          jobs: '["Diff"]'
+          jobs: '["Check dist"]'
           head_sha: ${{ github.event.pull_request.head.sha }}
           repo: 'gear-tech/fork-action'
           ref: ${{ github.head_ref || github.ref_name }}
