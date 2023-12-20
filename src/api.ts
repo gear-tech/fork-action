@@ -80,13 +80,8 @@ export default class Api {
     // Fork status of jobs from the workflow.
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
-      const _jobs = await this.getJobs(run.id, jobs);
-      if (_jobs.length === 0) {
-        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
-      }
-
-      const _checks = await Promise.all(
-        _jobs.map(async job => {
+      const _jobs = await Promise.all(
+        (await this.getJobs(run.id, jobs)).map(async job => {
           const check = checks[job.name];
           if (
             !check ||
@@ -96,15 +91,19 @@ export default class Api {
             return;
           } else {
             core.info(`Updating check ${check.name} ...`);
-            return this.updateCheck(job);
+            this.updateCheck(job);
+            return job;
           }
         })
       );
 
+      if (_jobs.length === 0) {
+        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+      }
+
       // Check if all jobs have been completed.
       if (
-        _checks.filter(check => check?.status === 'completed').length ===
-        jobs.length
+        _jobs.filter(job => job?.status === 'completed').length === jobs.length
       ) {
         core.info('All jobs completed .');
         return;
