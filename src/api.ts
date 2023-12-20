@@ -61,14 +61,16 @@ export default class Api {
     // If the workflow has already been dispatched, create
     // checks from the exist one.
     let run = await this.latestRun(workflow_id, head_sha);
-    if (!run) {
-      run = await this.dispatch(ref, workflow_id, inputs, head_sha);
-    }
+    if (!run) run = await this.dispatch(ref, workflow_id, inputs, head_sha);
 
     // Create checks from the specifed jobs.
-    core.info(`Forking ${jobs} from ${run.html_url} ...`);
+    core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
     const checks: Record<string, CheckRun | undefined> = (
-      await Promise.all(jobs.map(async job => this.createCheck(job, head_sha)))
+      await Promise.all(
+        jobs.map(async job =>
+          this.createCheck(job, head_sha, run as WorkflowRun)
+        )
+      )
     ).reduce(
       (_checks, check: CheckRun) => {
         _checks[check.name] = check;
@@ -91,7 +93,7 @@ export default class Api {
             return;
           } else {
             core.info(`Updating check ${check.name} ...`);
-            this.updateCheck(job);
+            this.updateCheck(check.id, job);
             return job;
           }
         })
@@ -120,16 +122,24 @@ export default class Api {
    * @param {string} head_sha - creates check on this head sha.
    * @returns {CheckRun} - Github check run.
    */
-  async createCheck(name: string, head_sha: string): Promise<CheckRun> {
+  async createCheck(
+    name: string,
+    head_sha: string,
+    run: WorkflowRun
+  ): Promise<CheckRun> {
     const { data } = await this.octokit.rest.checks.create({
       owner: this.owner,
       repo: this.repo,
       name,
+      output: {
+        title: name,
+        summary: `Forked from ${run.html_url}`
+      },
       head_sha
     });
 
-    core.debug(`Created check ${data} .`);
-    core.info(`Created check ${data.name} at ${data.details_url} .`);
+    core.debug(`Created check ${data}.`);
+    core.info(`Created check ${data.name} at ${data.details_url}.`);
     return data;
   }
 
@@ -162,8 +172,8 @@ export default class Api {
       process.exit(1);
     }
 
-    core.debug(`Latest run: ${JSON.stringify(run, null, 2)} .`);
-    core.info(`Dispatched workflow ${run.html_url} .`);
+    core.debug(`Latest run: ${JSON.stringify(run, null, 2)}.`);
+    core.info(`Dispatched workflow ${run.html_url}.`);
     return run;
   }
 
@@ -198,7 +208,7 @@ export default class Api {
     workflow_id: WorkflowId,
     head_sha: string,
     retry?: boolean
-  ): Promise<WorkflowRun | null> {
+  ): Promise<WorkflowRun | undefined> {
     await wait(5000);
 
     const {
@@ -215,7 +225,7 @@ export default class Api {
       if (retry) {
         return await this.latestRun(workflow_id, head_sha, retry);
       } else {
-        return null;
+        return;
       }
     }
 
@@ -234,7 +244,7 @@ export default class Api {
    * @param {Job} job - The most important job of a workflow run.
    * @returns {Promise<CheckRun>} - The updated check run.
    */
-  async updateCheck(job: Job): Promise<CheckRun> {
+  async updateCheck(check_run_id: number, job: Job): Promise<CheckRun> {
     let status: Status = 'in_progress';
     if (job.status === 'waiting') {
       status = undefined;
@@ -248,13 +258,13 @@ export default class Api {
     }
 
     core.info(
-      `Updating check ${job.name}, status: ${job.status}, conclusion: ${job.conclusion}`
+      `Updating check ${job.name} (${job.html_url}), status: ${job.status}, conclusion: ${job.conclusion}`
     );
 
     const { data } = await this.octokit.rest.checks.update({
       owner: this.owner,
       repo: this.repo,
-      check_run_id: job.id,
+      check_run_id,
       status,
       conclusion,
       output: {
