@@ -33,18 +33,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: npm
+          cache: yarn
 
       - name: Install Dependencies
         id: install
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Build dist/ Directory
         id: build
-        run: npm run bundle
+        run: yarn bundle
 
       # This will fail the workflow if the PR wasn't created by Dependabot.
-      - name: Compare Directories
+      - name: Diff
         id: diff
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then

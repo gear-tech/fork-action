@@ -1,5 +1,5 @@
-import core from "@actions/core";
-import { Inputs } from "@/types";
+import core from '@actions/core';
+import { Inputs } from '@/types';
 
 /*
  * Wait for a number of milliseconds.
@@ -10,32 +10,30 @@ import { Inputs } from "@/types";
 export async function wait(milliseconds: number): Promise<string> {
   return new Promise(resolve => {
     if (isNaN(milliseconds)) {
-      throw new Error('milliseconds not a number')
+      throw new Error('milliseconds not a number');
     }
 
-    setTimeout(() => resolve('done!'), milliseconds)
-  })
+    setTimeout(() => resolve('done!'), milliseconds);
+  });
 }
 
 /**
  * Unpack inputs from environment.
  */
 export function unpackInputs(): Inputs {
-  const repoFullName = core.getInput("repo").split("/");
+  const repoFullName = core.getInput('repo').split('/');
   if (repoFullName.length !== 2) {
-    core.setFailed("repo needs to be in the {owner}/{repository} format.");
+    core.setFailed('repo needs to be in the {owner}/{repository} format.');
     process.exit(1);
   }
 
   return {
     owner: repoFullName[0],
     repo: repoFullName[1],
-    options: {
-      ref: core.getInput("name"),
-      workflow_id: core.getInput("workflow_id"),
-      inputs: JSON.parse(core.getInput("inputs")),
-      jobs: JSON.parse(core.getInput("jobs")),
-      head_sha: core.getInput("head_sha"),
-    }
-  }
+    ref: core.getInput('name'),
+    workflow_id: core.getInput('workflow_id'),
+    inputs: JSON.parse(core.getInput('inputs')),
+    jobs: JSON.parse(core.getInput('jobs')),
+    head_sha: core.getInput('head_sha')
+  };
 }

@@ -26,26 +26,19 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
-      - name: Install Dependencies
-        id: npm-ci
-        run: npm ci
+      - name: Install current dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Check Format
-        id: npm-format-check
-        run: npm run format:check
+        run: yarn format:check
 
       - name: Lint
-        id: npm-lint
-        run: npm run lint
-
-      - name: Test
-        id: npm-ci-test
-        run: npm run ci-test
+        run: yarn lint
 
   test-action:
     name: GitHub Actions Test
     runs-on: ubuntu-latest
-
+    if: ${{ github.event_name === "pull_request" }}
     steps:
       - name: Checkout
         id: checkout
@@ -55,8 +48,9 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
-
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: '.github/workflows/check-dist.yml'
+          jobs: ['Diff']
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          repo: 'gear-tech/fork-action'
+          ref: ${{ github.head_ref || github.ref_name }}

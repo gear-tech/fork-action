@@ -2,6 +2,9 @@ name: 'Gear tech fork action.'
 description: 'Fork checks from workflow run.'
 
 inputs:
+  token:
+    description: 'The github token to trigger this action.'
+    required: true
   workflow_id:
     description: 'The ID of the target workflow.'
     required: true
@@ -19,10 +22,7 @@ inputs:
     description: 'The git reference of the target workflow.'
     required: true
     default: 'master'
-  token:
-    description: 'The github token to trigger this action.'
-    default: ${{ secrets.GITHUB_TOKEN }}
 
 runs:
-  using: node18
+  using: node20
   main: dist/index.js
