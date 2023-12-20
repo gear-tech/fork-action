@@ -1,8 +1,8 @@
 /**
  * API wrapper for the fork action and related usages.
  */
-import core from '@actions/core';
-import github from '@actions/github';
+import * as core from '@actions/core';
+import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
 import {
   Inputs,

@@ -28911,15 +28911,35 @@ function wrappy (fn, cb) {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 /**
  * API wrapper for the fork action and related usages.
  */
-const core_1 = __importDefault(__nccwpck_require__(2186));
-const github_1 = __importDefault(__nccwpck_require__(5438));
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
 const utils_1 = __nccwpck_require__(1314);
 /**
  * API wrapper for the fork action and related usages.
@@ -28934,7 +28954,7 @@ class Api {
     constructor(owner, repo) {
         this.owner = owner;
         this.repo = repo;
-        this.octokit = github_1.default.getOctokit(core_1.default.getInput('token'));
+        this.octokit = github.getOctokit(core.getInput('token'));
     }
     /**
      * Fork checks from inputs.
@@ -28980,7 +29000,7 @@ class Api {
             // Check if all jobs have been completed.
             if (_checks.filter(check => check?.status === 'completed').length ===
                 jobs.length) {
-                core_1.default.info('All jobs completed .');
+                core.info('All jobs completed .');
                 return;
             }
             else {
@@ -29002,8 +29022,8 @@ class Api {
             name,
             head_sha
         });
-        core_1.default.debug(`Created check ${data} .`);
-        core_1.default.info(`Created check ${data.name} at ${data.details_url} .`);
+        core.debug(`Created check ${data} .`);
+        core.info(`Created check ${data.name} at ${data.details_url} .`);
         return data;
     }
     /**
@@ -29015,7 +29035,7 @@ class Api {
      * @returns {WorkflowRun} - schema workflow run.
      **/
     async dispatch(ref, workflow_id, inputs, head_sha) {
-        core_1.default.info(`Dispatching workflow ${workflow_id} on ${ref}@${head_sha} ...`);
+        core.info(`Dispatching workflow ${workflow_id} on ${ref}@${head_sha} ...`);
         await this.octokit.rest.actions.createWorkflowDispatch({
             owner: this.owner,
             repo: this.repo,
@@ -29025,11 +29045,11 @@ class Api {
         });
         const run = await this.latestRun(workflow_id, head_sha, true);
         if (!run) {
-            core_1.default.setFailed('No workflow is found after dispatching.');
+            core.setFailed('No workflow is found after dispatching.');
             process.exit(1);
         }
-        core_1.default.debug(`Latest run: ${JSON.stringify(run, null, 2)} .`);
-        core_1.default.info(`Dispatched workflow ${run.html_url} .`);
+        core.debug(`Latest run: ${JSON.stringify(run, null, 2)} .`);
+        core.info(`Dispatched workflow ${run.html_url} .`);
         return run;
     }
     /**
@@ -29064,7 +29084,7 @@ class Api {
             head_sha
         });
         if (total_count === 0) {
-            core_1.default.debug(`No workflow runs found of ${workflow_id} at ${head_sha}`);
+            core.debug(`No workflow runs found of ${workflow_id} at ${head_sha}`);
             if (retry) {
                 return await this.latestRun(workflow_id, head_sha, retry);
             }
@@ -29095,7 +29115,7 @@ class Api {
         if (job.conclusion) {
             conclusion = job.conclusion;
         }
-        core_1.default.info(`Updating check ${job.name}, status: ${job.status}, conclusion: ${job.conclusion}`);
+        core.info(`Updating check ${job.name}, status: ${job.status}, conclusion: ${job.conclusion}`);
         const { data } = await this.octokit.rest.checks.update({
             owner: this.owner,
             repo: this.repo,
@@ -29120,12 +29140,35 @@ exports["default"] = Api;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
-const core_1 = __importDefault(__nccwpck_require__(2186));
+const core = __importStar(__nccwpck_require__(2186));
 const api_1 = __importDefault(__nccwpck_require__(8229));
 const utils_1 = __nccwpck_require__(1314);
 /**
@@ -29137,11 +29180,11 @@ async function run() {
     try {
         const inputs = (0, utils_1.unpackInputs)();
         const inputsJSON = JSON.stringify(inputs, null, 2);
-        core_1.default.info(`Workflow inputs: ${inputsJSON}`);
+        core.info(`Workflow inputs: ${inputsJSON}`);
         return await api_1.default.forkInputs(inputs);
     }
     catch (error) {
-        core_1.default.setFailed(JSON.stringify(error, null, 2));
+        core.setFailed(JSON.stringify(error, null, 2));
     }
 }
 exports.run = run;
@@ -29157,12 +29200,32 @@ exports.run = run;
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unpackInputs = exports.wait = void 0;
-const core_1 = __importDefault(__nccwpck_require__(2186));
+const core = __importStar(__nccwpck_require__(2186));
 /*
  * Wait for a number of milliseconds.
  *
@@ -29182,19 +29245,19 @@ exports.wait = wait;
  * Unpack inputs from environment.
  */
 function unpackInputs() {
-    const repoFullName = core_1.default.getInput('repo').split('/');
+    const repoFullName = core.getInput('repo').split('/');
     if (repoFullName.length !== 2) {
-        core_1.default.setFailed('repo needs to be in the {owner}/{repository} format.');
+        core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
     return {
         owner: repoFullName[0],
         repo: repoFullName[1],
-        ref: core_1.default.getInput('name'),
-        workflow_id: core_1.default.getInput('workflow_id'),
-        inputs: JSON.parse(core_1.default.getInput('inputs')),
-        jobs: JSON.parse(core_1.default.getInput('jobs')),
-        head_sha: core_1.default.getInput('head_sha')
+        ref: core.getInput('name'),
+        workflow_id: core.getInput('workflow_id'),
+        inputs: JSON.parse(core.getInput('inputs')),
+        jobs: JSON.parse(core.getInput('jobs')),
+        head_sha: core.getInput('head_sha')
     };
 }
 exports.unpackInputs = unpackInputs;

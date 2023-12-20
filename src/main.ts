@@ -1,4 +1,4 @@
-import core from '@actions/core';
+import * as core from '@actions/core';
 import Api from '@/api';
 import { unpackInputs } from '@/utils';
 
