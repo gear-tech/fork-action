@@ -28980,20 +28980,24 @@ class Api {
             run = await this.dispatch(ref, workflow_id, inputs, head_sha);
         }
         // Create checks from the specifed jobs.
+        core.info(`Forking ${jobs} from ${run.html_url} ...`);
         const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(job, head_sha)))).reduce((_checks, check) => {
             _checks[check.name] = check;
             return _checks;
         }, {});
         // Fork status of jobs from the workflow.
+        core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
         for (;;) {
             const _jobs = await this.getJobs(run.id, jobs);
             const _checks = await Promise.all(_jobs.map(async (job) => {
                 const check = checks[job.name];
                 if (!check ||
                     (check.status === job.status && check.conclusion === job.conclusion)) {
+                    core.debug(`No need to update check ${job.name} .`);
                     return;
                 }
                 else {
+                    core.info(`Updating check ${check.name} ...`);
                     return this.updateCheck(job);
                 }
             }));

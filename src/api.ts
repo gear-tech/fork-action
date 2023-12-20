@@ -66,6 +66,7 @@ export default class Api {
     }
 
     // Create checks from the specifed jobs.
+    core.info(`Forking ${jobs} from ${run.html_url} ...`);
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(jobs.map(async job => this.createCheck(job, head_sha)))
     ).reduce(
@@ -77,6 +78,7 @@ export default class Api {
     );
 
     // Fork status of jobs from the workflow.
+    core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await this.getJobs(run.id, jobs);
       const _checks = await Promise.all(
@@ -86,8 +88,10 @@ export default class Api {
             !check ||
             (check.status === job.status && check.conclusion === job.conclusion)
           ) {
+            core.debug(`No need to update check ${job.name} .`);
             return;
           } else {
+            core.info(`Updating check ${check.name} ...`);
             return this.updateCheck(job);
           }
         })
