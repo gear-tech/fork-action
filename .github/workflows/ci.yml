@@ -33,7 +33,7 @@ jobs:
         run: yarn lint
 
   fork-running:
-    name: GitHub Actions Test
+    name: fork-running
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -52,7 +52,7 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
 
   dispatch-and-fork:
-    name: GitHub Actions Test
+    name: dispatch-and-fork
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -71,5 +71,5 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
           prefix: 'build / '
           inputs:
-            '{ "title": ${{ github.event.pull_request.title }}, "number":
-            ${{github.event.number }} }'
+            '{ "title": "${{ github.event.pull_request.title }}", "number": "${{
+            github.event.number }}" }'
