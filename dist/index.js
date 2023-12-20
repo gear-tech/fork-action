@@ -29184,7 +29184,9 @@ async function run() {
         return await api_1.default.forkInputs(inputs);
     }
     catch (error) {
-        core.setFailed(JSON.stringify(error, null, 2));
+        const message = JSON.stringify(error, null, 2);
+        core.error(message);
+        core.setFailed(message);
     }
 }
 exports.run = run;
