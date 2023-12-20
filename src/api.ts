@@ -55,6 +55,7 @@ export default class Api {
     ref,
     workflow_id,
     inputs,
+    prefix,
     jobs,
     head_sha
   }: ForkOptions): Promise<void> {
@@ -68,7 +69,7 @@ export default class Api {
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(
         jobs.map(async job =>
-          this.createCheck(job, head_sha, run as WorkflowRun)
+          this.createCheck(prefix + job, head_sha, run as WorkflowRun)
         )
       )
     ).reduce(
@@ -120,6 +121,7 @@ export default class Api {
    *
    * @param {string} name - the name of the check run.
    * @param {string} head_sha - creates check on this head sha.
+   * @param {WorkflowRun} run - The workflow run.
    * @returns {CheckRun} - Github check run.
    */
   async createCheck(
@@ -241,6 +243,7 @@ export default class Api {
   /**
    * Update a check run from jobs.
    *
+   * @param {number} check_run_id - The ID of the check run to update.
    * @param {Job} job - The most important job of a workflow run.
    * @returns {Promise<CheckRun>} - The updated check run.
    */

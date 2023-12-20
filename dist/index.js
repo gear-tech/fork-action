@@ -28972,7 +28972,7 @@ class Api {
      * @params {ForkOptions} - The fork options.
      * @returns {Promise<void>}
      */
-    async fork({ ref, workflow_id, inputs, jobs, head_sha }) {
+    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
@@ -28980,7 +28980,7 @@ class Api {
             run = await this.dispatch(ref, workflow_id, inputs, head_sha);
         // Create checks from the specifed jobs.
         core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
-        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(job, head_sha, run)))).reduce((_checks, check) => {
+        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(prefix + job, head_sha, run)))).reduce((_checks, check) => {
             _checks[check.name] = check;
             return _checks;
         }, {});
@@ -29018,6 +29018,7 @@ class Api {
      *
      * @param {string} name - the name of the check run.
      * @param {string} head_sha - creates check on this head sha.
+     * @param {WorkflowRun} run - The workflow run.
      * @returns {CheckRun} - Github check run.
      */
     async createCheck(name, head_sha, run) {
@@ -29109,6 +29110,7 @@ class Api {
     /**
      * Update a check run from jobs.
      *
+     * @param {number} check_run_id - The ID of the check run to update.
      * @param {Job} job - The most important job of a workflow run.
      * @returns {Promise<CheckRun>} - The updated check run.
      */
@@ -29267,6 +29269,7 @@ function unpackInputs() {
         workflow_id: core.getInput('workflow_id'),
         inputs: JSON.parse(core.getInput('inputs')),
         jobs: JSON.parse(core.getInput('jobs')),
+        prefix: core.getInput('prefix'),
         head_sha: core.getInput('head_sha')
     };
 }

@@ -18,6 +18,10 @@ inputs:
     description: 'The inputs of the target workflow'
     required: true
     default: '{}'
+  prefix:
+    description: 'The prefix of the check name'
+    required: true
+    default: ''
   repo:
     description: 'The full name of the github repo.'
     required: true

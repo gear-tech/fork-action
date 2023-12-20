@@ -32,7 +32,7 @@ jobs:
       - name: Lint
         run: yarn lint
 
-  test-action:
+  fork-running:
     name: GitHub Actions Test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -41,8 +41,7 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
-        id: test-action
+      - name: Fork running workflow
         uses: ./
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -51,3 +50,26 @@ jobs:
           head_sha: ${{ github.event.pull_request.head.sha }}
           repo: 'gear-tech/fork-action'
           ref: ${{ github.head_ref || github.ref_name }}
+
+    dispatch-and-fork:
+      name: GitHub Actions Test
+      runs-on: ubuntu-latest
+      if: github.event_name == 'pull_request'
+      steps:
+        - name: Checkout
+          id: checkout
+          uses: actions/checkout@v4
+
+        - name: Fork running workflow
+          uses: ./
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            workflow_id: '.github/workflows/dispatch.yml'
+            jobs: '["dispatch"]'
+            head_sha: ${{ github.event.pull_request.head.sha }}
+            repo: 'gear-tech/fork-action'
+            ref: ${{ github.head_ref || github.ref_name }}
+            prefix: 'build / '
+            inputs:
+              '{ "title": ${{ github.event.pull_request.title }}, "number":
+              ${{github.event.number }} }'

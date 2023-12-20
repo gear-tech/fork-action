@@ -34,6 +34,7 @@ export function unpackInputs(): Inputs {
     workflow_id: core.getInput('workflow_id'),
     inputs: JSON.parse(core.getInput('inputs')),
     jobs: JSON.parse(core.getInput('jobs')),
+    prefix: core.getInput('prefix'),
     head_sha: core.getInput('head_sha')
   };
 }
