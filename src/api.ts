@@ -214,17 +214,23 @@ export default class Api {
     core.info(`Getting latest run of ${workflow_id} at ${head_sha} ...`);
     await wait(3000);
 
-    const {
-      data: { total_count, workflow_runs }
-    } = await this.octokit.rest.actions.listWorkflowRuns({
-      owner: this.owner,
-      repo: this.repo,
-      workflow_id,
-      head_sha
-    });
+    let total_count = 0;
+    let workflow_runs: WorkflowRun[] = [];
+    try {
+      const { data } = await this.octokit.rest.actions.listWorkflowRuns({
+        owner: this.owner,
+        repo: this.repo,
+        workflow_id,
+        head_sha
+      });
+      total_count = data.total_count;
+      workflow_runs = data.workflow_runs;
+    } catch (error) {
+      core.warning(`No workflow runs found of ${workflow_id} at ${head_sha} .`);
+      if (error instanceof Error) core.debug(error.message);
+    }
 
     if (total_count === 0) {
-      core.debug(`No workflow runs found of ${workflow_id} at ${head_sha}`);
       if (retry) {
         return await this.latestRun(workflow_id, head_sha, retry);
       } else {
