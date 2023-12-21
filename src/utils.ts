@@ -30,7 +30,7 @@ export function unpackInputs(): Inputs {
   return {
     owner: repoFullName[0],
     repo: repoFullName[1],
-    ref: core.getInput('name'),
+    ref: core.getInput('ref'),
     workflow_id: core.getInput('workflow_id'),
     inputs: JSON.parse(core.getInput('inputs')),
     jobs: JSON.parse(core.getInput('jobs')),
