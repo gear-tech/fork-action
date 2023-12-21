@@ -82,7 +82,7 @@ export default class Api {
 
     // Fork status of jobs from the workflow.
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
-    for (; ;) {
+    for (;;) {
       const _jobs = await Promise.all(
         (await this.getJobs(run.id, jobs)).map(async job => {
           const check = checks[job.name];
@@ -214,14 +214,16 @@ export default class Api {
     core.info(`Getting latest run of ${workflow_id} at ${head_sha} ...`);
     await wait(5000);
 
-    const { data: { total_count, workflow_runs }, status } = await this.octokit.rest.actions.listWorkflowRuns({
+    const {
+      data: { total_count, workflow_runs }
+    } = await this.octokit.rest.actions.listWorkflowRuns({
       owner: this.owner,
       repo: this.repo,
       workflow_id,
       head_sha
     });
 
-    if (status !== 200 || total_count === 0) {
+    if (total_count === 0) {
       core.debug(`No workflow runs found of ${workflow_id} at ${head_sha}`);
       if (retry) {
         return await this.latestRun(workflow_id, head_sha, retry);

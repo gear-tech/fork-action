@@ -29086,6 +29086,7 @@ class Api {
      * @returns {Promise<WorkflowRun | null>} - Sorted workflow runs.
      */
     async latestRun(workflow_id, head_sha, retry) {
+        core.info(`Getting latest run of ${workflow_id} at ${head_sha} ...`);
         await (0, utils_1.wait)(5000);
         const { data: { total_count, workflow_runs } } = await this.octokit.rest.actions.listWorkflowRuns({
             owner: this.owner,
