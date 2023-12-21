@@ -85,7 +85,7 @@ export default class Api {
     for (;;) {
       const _jobs = await Promise.all(
         (await this.getJobs(run.id, jobs)).map(async job => {
-          const check = checks[job.name];
+          const check = checks[prefix + job.name];
           if (
             !check ||
             (check.status === job.status && check.conclusion === job.conclusion)
@@ -141,7 +141,7 @@ export default class Api {
     });
 
     core.debug(`Created check ${data}.`);
-    core.info(`Created check ${data.name} at ${data.details_url}.`);
+    core.info(`Created check ${data.name} at ${data.html_url}.`);
     return data;
   }
 

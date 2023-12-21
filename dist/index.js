@@ -28988,7 +28988,7 @@ class Api {
         core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
         for (;;) {
             const _jobs = await Promise.all((await this.getJobs(run.id, jobs)).map(async (job) => {
-                const check = checks[job.name];
+                const check = checks[prefix + job.name];
                 if (!check ||
                     (check.status === job.status && check.conclusion === job.conclusion)) {
                     core.debug(`No need to update check ${job.name} .`);
@@ -29033,7 +29033,7 @@ class Api {
             head_sha
         });
         core.debug(`Created check ${data}.`);
-        core.info(`Created check ${data.name} at ${data.details_url}.`);
+        core.info(`Created check ${data.name} at ${data.html_url}.`);
         return data;
     }
     /**
@@ -29273,6 +29273,9 @@ function unpackInputs() {
         core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
+    let prefix = core.getInput('prefix');
+    if (prefix !== '')
+        prefix += ' / ';
     return {
         owner: repoFullName[0],
         repo: repoFullName[1],
@@ -29280,8 +29283,8 @@ function unpackInputs() {
         workflow_id: core.getInput('workflow_id'),
         inputs: JSON.parse(core.getInput('inputs')),
         jobs: JSON.parse(core.getInput('jobs')),
-        prefix: core.getInput('prefix'),
-        head_sha: core.getInput('head_sha')
+        head_sha: core.getInput('head_sha'),
+        prefix
     };
 }
 exports.unpackInputs = unpackInputs;
