@@ -1,13 +1,12 @@
-name: Continuous Integration
+name: CI
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
-
-permissions:
-  contents: read
 
 jobs:
   test-typescript:
@@ -26,37 +25,53 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
-      - name: Install Dependencies
-        id: npm-ci
-        run: npm ci
+      - name: Install current dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Check Format
-        id: npm-format-check
-        run: npm run format:check
+        run: yarn format:check
 
       - name: Lint
-        id: npm-lint
-        run: npm run lint
+        run: yarn lint
 
-      - name: Test
-        id: npm-ci-test
-        run: npm run ci-test
-
-  test-action:
-    name: GitHub Actions Test
+  fork-running:
+    name: fork-running
     runs-on: ubuntu-latest
-
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
-        id: test-action
+      - name: Fork running workflow
         uses: ./
         with:
-          milliseconds: 2000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: '.github/workflows/check-dist.yml'
+          jobs: '["Check dist"]'
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          repo: 'gear-tech/fork-action'
+          ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+  dispatch-and-fork:
+    name: dispatch-and-fork
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Dispatch and Fork
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow_id: '.github/workflows/dispatch.yml'
+          jobs: '["dispatch"]'
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          repo: 'gear-tech/fork-action'
+          ref: ${{ github.head_ref || github.ref_name }}
+          prefix: 'build'
+          inputs:
+            '{ "title": "${{ github.event.pull_request.title }}", "number": "${{
+            github.event.number }}" }'
