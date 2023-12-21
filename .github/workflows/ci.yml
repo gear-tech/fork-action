@@ -74,4 +74,4 @@ jobs:
           prefix: 'build'
           inputs:
             '{ "title": "${{ github.event.pull_request.title }}", "number": "${{
-            github.event.number" }} }'
+            github.event.number }}" }'
