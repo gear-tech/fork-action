@@ -9,6 +9,7 @@ on:
       number:
         type: string
         description: 'Pull request number that triggers this workflow'
+  pull_request:
 
 run-name: ${{ inputs.title }} ( ${{ format('#{0}', inputs.number) }} )
 
@@ -16,4 +17,5 @@ jobs:
   dispatch:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Hello, world"
+      - name: Dummy
+        run: echo "Hello, world"
