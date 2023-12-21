@@ -29087,13 +29087,23 @@ class Api {
      */
     async latestRun(workflow_id, head_sha, retry) {
         core.info(`Getting latest run of ${workflow_id} at ${head_sha} ...`);
-        await (0, utils_1.wait)(5000);
-        const { data: { total_count, workflow_runs } } = await this.octokit.rest.actions.listWorkflowRuns({
-            owner: this.owner,
-            repo: this.repo,
-            workflow_id,
-            head_sha
-        });
+        await (0, utils_1.wait)(3000);
+        let total_count = 0;
+        let workflow_runs = [];
+        try {
+            const { data } = await this.octokit.rest.actions.listWorkflowRuns({
+                owner: this.owner,
+                repo: this.repo,
+                workflow_id,
+                head_sha
+            });
+            total_count = data.total_count;
+            workflow_runs = data.workflow_runs;
+        }
+        catch (error) {
+            if (error instanceof Error)
+                core.warning(error.message);
+        }
         if (total_count === 0) {
             core.debug(`No workflow runs found of ${workflow_id} at ${head_sha}`);
             if (retry) {
