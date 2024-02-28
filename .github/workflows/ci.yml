@@ -37,6 +37,7 @@ jobs:
   fork-running:
     name: fork-running
     runs-on: ubuntu-latest
+    permissions: write-all
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
@@ -56,6 +57,7 @@ jobs:
   dispatch-and-fork:
     name: dispatch-and-fork
     runs-on: ubuntu-latest
+    permissions: write-all
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout
