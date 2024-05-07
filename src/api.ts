@@ -88,20 +88,24 @@ export default class Api {
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await Promise.all(
-        (await this.getJobs(run.id, jobs, needs)).map(async job => {
-          const check = checks[`${prefix}/${job.name}`];
-          if (
-            !check ||
-            (check.status === job.status && check.conclusion === job.conclusion)
-          ) {
-            core.debug(`No need to update check ${job.name} .`);
-            return;
-          } else {
-            core.info(`Updating check ${check.name} ...`);
-            this.updateCheck(check.id, job);
-            return job;
-          }
-        })
+        (await this.getJobs(run.id, jobs, needs))
+          // NOTE: avoid forking self.
+          .filter(job => job.html_url?.includes('/job/'))
+          .map(async job => {
+            const check = checks[`${prefix}/${job.name}`];
+            if (
+              !check ||
+              (check.status === job.status &&
+                check.conclusion === job.conclusion)
+            ) {
+              core.debug(`No need to update check ${job.name} .`);
+              return;
+            } else {
+              core.info(`Updating check ${check.name} ...`);
+              this.updateCheck(check.id, job);
+              return job;
+            }
+          })
       );
 
       if (_jobs.length === 0) {
@@ -211,8 +215,8 @@ export default class Api {
     // Check if required jobs are processed.
     const requiredJobs = jobs.filter(job => needs.includes(job.name));
     if (
-      requiredJobs.length != needs.length ||
-      requiredJobs.filter(job => job.status != 'completed').length > 0
+      requiredJobs.length !== needs.length ||
+      requiredJobs.filter(job => job.status !== 'completed').length > 0
     ) {
       await wait(5000);
       return await this.getJobs(run_id, filter, needs);
