@@ -18,8 +18,8 @@ inputs:
     description: 'The inputs of the target workflow'
     required: true
     default: '{}'
-  prefix:
-    description: 'The prefix of the check name'
+  workflow:
+    description: 'The workflow of the check'
     required: true
     default: ''
   repo:

@@ -55,9 +55,10 @@ export default class Api {
     ref,
     workflow_id,
     inputs,
-    prefix,
+    workflow,
     jobs,
-    head_sha
+    head_sha,
+    needs
   }: ForkOptions): Promise<void> {
     // If the workflow has already been dispatched, create
     // checks from the exist one.
@@ -65,11 +66,14 @@ export default class Api {
     if (!run) run = await this.dispatch(ref, workflow_id, inputs, head_sha);
 
     // Create checks from the specifed jobs.
+    //
+    // TODO: Fetch the checks instead of creating if the workflow has
+    // already been triggered.
     core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(
         jobs.map(async job =>
-          this.createCheck(prefix + job, head_sha, run as WorkflowRun)
+          this.createCheck(`${workflow}/${job}`, head_sha, run as WorkflowRun)
         )
       )
     ).reduce(
@@ -84,8 +88,8 @@ export default class Api {
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await Promise.all(
-        (await this.getJobs(run.id, jobs)).map(async job => {
-          const check = checks[prefix + job.name];
+        (await this.getJobs(run.id, jobs, needs)).map(async job => {
+          const check = checks[`${workflow}/${job.name}`];
           if (
             !check ||
             (check.status === job.status && check.conclusion === job.conclusion)
@@ -186,7 +190,11 @@ export default class Api {
    * @param {string[]} filter - Job names to be filtered out.
    * @returns {Promise<Job[]>} - Jobs of a workflow run.
    */
-  async getJobs(run_id: number, filter: string[]): Promise<Job[]> {
+  async getJobs(
+    run_id: number,
+    filter: string[],
+    needs: string[]
+  ): Promise<Job[]> {
     const {
       data: { jobs }
     } = await this.octokit.rest.actions.listJobsForWorkflowRun({
@@ -194,6 +202,21 @@ export default class Api {
       repo: this.repo,
       run_id
     });
+
+    if (jobs.length === 0) {
+      core.setFailed(`No workflow is found from ${run_id}`);
+      process.exit(1);
+    }
+
+    // Check if required jobs are processed.
+    const requiredJobs = jobs.filter(job => needs.includes(job.name));
+    if (
+      requiredJobs.length != needs.length ||
+      requiredJobs.filter(job => job.status != 'completed').length > 0
+    ) {
+      await wait(5000);
+      return await this.getJobs(run_id, filter, needs);
+    }
 
     return jobs.filter(job => filter.includes(job.name));
   }
