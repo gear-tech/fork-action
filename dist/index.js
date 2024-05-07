@@ -28972,36 +28972,45 @@ class Api {
      * @params {ForkOptions} - The fork options.
      * @returns {Promise<void>}
      */
-    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
+    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha, needs }) {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
         if (!run)
             run = await this.dispatch(ref, workflow_id, inputs, head_sha);
         // Create checks from the specifed jobs.
+        //
+        // TODO: Fetch the checks instead of creating if the workflow has
+        // already been triggered.
         core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
-        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(prefix + job, head_sha, run)))).reduce((_checks, check) => {
+        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(`${prefix}/${job}`, head_sha, run)))).reduce((_checks, check) => {
             _checks[check.name] = check;
             return _checks;
         }, {});
         // Fork status of jobs from the workflow.
         core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
         for (;;) {
-            const _jobs = await Promise.all((await this.getJobs(run.id, jobs)).map(async (job) => {
-                const check = checks[prefix + job.name];
+            const _jobs = await Promise.all((await this.getJobs(run.id, jobs, needs))
+                // NOTE: avoid forking self.
+                .filter(job => job.html_url?.includes('/job/'))
+                .map(async (job) => {
+                const check = checks[`${prefix}/${job.name}`];
                 if (!check ||
-                    (check.status === job.status && check.conclusion === job.conclusion)) {
+                    (check.status === job.status &&
+                        check.conclusion === job.conclusion)) {
                     core.debug(`No need to update check ${job.name} .`);
                     return;
                 }
                 else {
-                    core.info(`Updating check ${check.name} ...`);
                     this.updateCheck(check.id, job);
+                    check.status =
+                        job.status === 'waiting' ? 'in_progress' : job.status;
+                    check.conclusion = job.conclusion;
                     return job;
                 }
             }));
             if (_jobs.length === 0) {
-                core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+                core.warning(`No jobs of ${jobs} found from ${run.url} .`);
             }
             // Check if all jobs have been completed.
             if (_jobs.filter(job => job?.status === 'completed').length === jobs.length) {
@@ -29026,6 +29035,7 @@ class Api {
             owner: this.owner,
             repo: this.repo,
             name,
+            status: 'in_progress',
             output: {
                 title: name,
                 summary: `Forked from ${run.html_url}`
@@ -29069,12 +29079,23 @@ class Api {
      * @param {string[]} filter - Job names to be filtered out.
      * @returns {Promise<Job[]>} - Jobs of a workflow run.
      */
-    async getJobs(run_id, filter) {
+    async getJobs(run_id, filter, needs) {
         const { data: { jobs } } = await this.octokit.rest.actions.listJobsForWorkflowRun({
             owner: this.owner,
             repo: this.repo,
             run_id
         });
+        if (jobs.length === 0) {
+            core.setFailed(`No workflow is found from ${run_id}`);
+            process.exit(1);
+        }
+        // Check if required jobs are processed.
+        const requiredJobs = jobs.filter(job => needs.includes(job.name));
+        if (requiredJobs.length !== needs.length ||
+            requiredJobs.filter(job => job.status !== 'completed').length > 0) {
+            await (0, utils_1.wait)(5000);
+            return await this.getJobs(run_id, filter, needs);
+        }
         return jobs.filter(job => filter.includes(job.name));
     }
     /**
@@ -29133,7 +29154,7 @@ class Api {
         else {
             status = job.status;
         }
-        let conclusion = 'neutral';
+        let conclusion = undefined;
         if (job.conclusion) {
             conclusion = job.conclusion;
         }
@@ -29273,9 +29294,6 @@ function unpackInputs() {
         core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
-    let prefix = core.getInput('prefix');
-    if (prefix !== '')
-        prefix += ' / ';
     return {
         owner: repoFullName[0],
         repo: repoFullName[1],
@@ -29284,7 +29302,8 @@ function unpackInputs() {
         inputs: JSON.parse(core.getInput('inputs')),
         jobs: JSON.parse(core.getInput('jobs')),
         head_sha: core.getInput('head_sha'),
-        prefix
+        prefix: core.getInput('workflow'),
+        needs: JSON.parse(core.getInput('needs'))
     };
 }
 exports.unpackInputs = unpackInputs;
