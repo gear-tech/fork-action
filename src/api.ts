@@ -112,6 +112,13 @@ export default class Api {
         core.warning(`No jobs of ${jobs} found from ${run.url}.`);
       }
 
+      // Log current job status
+      _jobs.forEach(job => {
+        console.log(
+          `Job ${job?.name}: status -> ${job?.status} conclusion -> ${job?.conclusion}`
+        );
+      });
+
       // Check if all jobs have been completed.
       if (
         _jobs.filter(job => job?.status === 'completed').length === jobs.length
