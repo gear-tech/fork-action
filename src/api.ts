@@ -101,7 +101,6 @@ export default class Api {
               core.debug(`No need to update check ${job.name} .`);
               return;
             } else {
-              core.info(`Updating check ${check.name} ...`);
               this.updateCheck(check.id, job);
               return job;
             }
