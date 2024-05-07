@@ -109,7 +109,8 @@ export default class Api {
       );
 
       if (_jobs.length === 0) {
-        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+        core.setFailed(`No jobs of ${jobs} found from ${run.url}.`);
+        process.exit(1);
       }
 
       // Check if all jobs have been completed.
