@@ -289,7 +289,7 @@ export default class Api {
       status = job.status;
     }
 
-    let conclusion: Conclusion = 'neutral';
+    let conclusion: Conclusion | undefined = undefined;
     if (job.conclusion) {
       conclusion = job.conclusion;
     }
