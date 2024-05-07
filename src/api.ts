@@ -115,11 +115,11 @@ export default class Api {
       }
 
       // Log current job status
-      _jobs.forEach(job => {
+      for (const job of _jobs) {
         console.log(
           `Job ${job?.name}: status -> ${job?.status} conclusion -> ${job?.conclusion}`
         );
-      });
+      }
 
       // Check if all jobs have been completed.
       if (
