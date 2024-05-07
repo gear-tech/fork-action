@@ -102,13 +102,16 @@ export default class Api {
               return;
             } else {
               this.updateCheck(check.id, job);
+              check.status =
+                job.status === 'waiting' ? 'in_progress' : job.status;
+              check.conclusion = job.conclusion;
               return job;
             }
           })
       );
 
       if (_jobs.length === 0) {
-        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+        core.warning(`No jobs of ${jobs} found from ${run.url} .`);
       }
 
       // Log current job status
