@@ -29295,7 +29295,7 @@ function unpackInputs() {
         core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
-    let prefix = core.getInput('workflow');
+    let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
     return {
