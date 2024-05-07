@@ -57,7 +57,8 @@ export default class Api {
     inputs,
     prefix,
     jobs,
-    head_sha
+    head_sha,
+    needs
   }: ForkOptions): Promise<void> {
     // If the workflow has already been dispatched, create
     // checks from the exist one.
@@ -65,11 +66,14 @@ export default class Api {
     if (!run) run = await this.dispatch(ref, workflow_id, inputs, head_sha);
 
     // Create checks from the specifed jobs.
+    //
+    // TODO: Fetch the checks instead of creating if the workflow has
+    // already been triggered.
     core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(
         jobs.map(async job =>
-          this.createCheck(prefix + job, head_sha, run as WorkflowRun)
+          this.createCheck(`${prefix}${job}`, head_sha, run as WorkflowRun)
         )
       )
     ).reduce(
@@ -84,24 +88,30 @@ export default class Api {
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await Promise.all(
-        (await this.getJobs(run.id, jobs)).map(async job => {
-          const check = checks[prefix + job.name];
-          if (
-            !check ||
-            (check.status === job.status && check.conclusion === job.conclusion)
-          ) {
-            core.debug(`No need to update check ${job.name} .`);
-            return;
-          } else {
-            core.info(`Updating check ${check.name} ...`);
-            this.updateCheck(check.id, job);
-            return job;
-          }
-        })
+        (await this.getJobs(run.id, jobs, needs))
+          // NOTE: avoid forking self.
+          .filter(job => job.html_url?.includes('/job/'))
+          .map(async job => {
+            const check = checks[`${prefix}${job.name}`];
+            if (
+              !check ||
+              (check.status === job.status &&
+                check.conclusion === job.conclusion)
+            ) {
+              core.debug(`No need to update check ${job.name} .`);
+              return job;
+            } else {
+              this.updateCheck(check.id, job);
+              check.status =
+                job.status === 'waiting' ? 'in_progress' : job.status;
+              check.conclusion = job.conclusion;
+              return job;
+            }
+          })
       );
 
       if (_jobs.length === 0) {
-        core.warning(`No jobs of ${jobs} found from ${run.url}.`);
+        core.warning(`No jobs of ${jobs} found from ${run.url} .`);
       }
 
       // Check if all jobs have been completed.
@@ -133,6 +143,7 @@ export default class Api {
       owner: this.owner,
       repo: this.repo,
       name,
+      status: 'in_progress',
       output: {
         title: name,
         summary: `Forked from ${run.html_url}`
@@ -186,7 +197,11 @@ export default class Api {
    * @param {string[]} filter - Job names to be filtered out.
    * @returns {Promise<Job[]>} - Jobs of a workflow run.
    */
-  async getJobs(run_id: number, filter: string[]): Promise<Job[]> {
+  async getJobs(
+    run_id: number,
+    filter: string[],
+    needs: string[]
+  ): Promise<Job[]> {
     const {
       data: { jobs }
     } = await this.octokit.rest.actions.listJobsForWorkflowRun({
@@ -194,6 +209,22 @@ export default class Api {
       repo: this.repo,
       run_id
     });
+
+    if (jobs.length === 0) {
+      core.setFailed(`No workflow is found from ${run_id}`);
+      process.exit(1);
+    }
+
+    // Check if required jobs are processed.
+    const requiredJobs = jobs.filter(job => needs.includes(job.name));
+    if (
+      requiredJobs.length !== needs.length ||
+      requiredJobs.filter(job => job.status !== 'completed').length > 0
+    ) {
+      core.info(`Waiting for ${needs} ...`);
+      await wait(5000);
+      return await this.getJobs(run_id, filter, needs);
+    }
 
     return jobs.filter(job => filter.includes(job.name));
   }
@@ -262,7 +293,7 @@ export default class Api {
       status = job.status;
     }
 
-    let conclusion: Conclusion = 'neutral';
+    let conclusion: Conclusion | undefined = undefined;
     if (job.conclusion) {
       conclusion = job.conclusion;
     }

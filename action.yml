@@ -19,7 +19,7 @@ inputs:
     required: true
     default: '{}'
   prefix:
-    description: 'The prefix of the check name'
+    description: 'The prefix of the check'
     required: true
     default: ''
   repo:
@@ -30,6 +30,9 @@ inputs:
     description: 'The git reference of the target workflow.'
     required: true
     default: 'master'
+  needs:
+    description: 'The required jobs for the target jobs'
+    default: '[]'
 
 runs:
   using: node20
