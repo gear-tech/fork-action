@@ -38,8 +38,8 @@ export interface ForkOptions {
   workflow_id: WorkflowId;
   // Inputs of the workflow.
   inputs: WorkflowInputs;
-  // The workflow of the forked checks.
-  workflow: string;
+  // The prefix of the forked checks.
+  prefix: string;
   // The jobs to be forked.
   jobs: string[];
   // The commit hash to fork.

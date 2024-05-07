@@ -73,7 +73,8 @@ jobs:
           head_sha: ${{ github.event.pull_request.head.sha }}
           repo: 'gear-tech/fork-action'
           ref: ${{ github.head_ref || github.ref_name }}
-          workflow: 'build'
+          prefix: 'build'
+          needs: '["dynamic-profiles"]'
           inputs:
             '{ "title": "${{ github.event.pull_request.title }}", "number": "${{
             github.event.number }}" }'

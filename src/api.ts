@@ -55,7 +55,7 @@ export default class Api {
     ref,
     workflow_id,
     inputs,
-    workflow,
+    prefix,
     jobs,
     head_sha,
     needs
@@ -73,7 +73,7 @@ export default class Api {
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(
         jobs.map(async job =>
-          this.createCheck(`${workflow}/${job}`, head_sha, run as WorkflowRun)
+          this.createCheck(`${prefix}/${job}`, head_sha, run as WorkflowRun)
         )
       )
     ).reduce(
@@ -89,7 +89,7 @@ export default class Api {
     for (;;) {
       const _jobs = await Promise.all(
         (await this.getJobs(run.id, jobs, needs)).map(async job => {
-          const check = checks[`${workflow}/${job.name}`];
+          const check = checks[`${prefix}/${job.name}`];
           if (
             !check ||
             (check.status === job.status && check.conclusion === job.conclusion)
