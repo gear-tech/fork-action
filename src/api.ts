@@ -141,6 +141,7 @@ export default class Api {
       owner: this.owner,
       repo: this.repo,
       name,
+      status: 'in_progress',
       output: {
         title: name,
         summary: `Forked from ${run.html_url}`
