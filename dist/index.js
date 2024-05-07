@@ -28983,7 +28983,7 @@ class Api {
         // TODO: Fetch the checks instead of creating if the workflow has
         // already been triggered.
         core.info(`Creating checks ${jobs} from ${run.html_url} ...`);
-        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(`${prefix}/${job}`, head_sha, run)))).reduce((_checks, check) => {
+        const checks = (await Promise.all(jobs.map(async (job) => this.createCheck(`${prefix}${job}`, head_sha, run)))).reduce((_checks, check) => {
             _checks[check.name] = check;
             return _checks;
         }, {});
@@ -28994,12 +28994,12 @@ class Api {
                 // NOTE: avoid forking self.
                 .filter(job => job.html_url?.includes('/job/'))
                 .map(async (job) => {
-                const check = checks[`${prefix}/${job.name}`];
+                const check = checks[`${prefix}${job.name}`];
                 if (!check ||
                     (check.status === job.status &&
                         check.conclusion === job.conclusion)) {
                     core.debug(`No need to update check ${job.name} .`);
-                    return;
+                    return job;
                 }
                 else {
                     this.updateCheck(check.id, job);
@@ -29093,6 +29093,7 @@ class Api {
         const requiredJobs = jobs.filter(job => needs.includes(job.name));
         if (requiredJobs.length !== needs.length ||
             requiredJobs.filter(job => job.status !== 'completed').length > 0) {
+            core.info(`Waiting for ${needs} ...`);
             await (0, utils_1.wait)(5000);
             return await this.getJobs(run_id, filter, needs);
         }
@@ -29294,6 +29295,9 @@ function unpackInputs() {
         core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
+    let prefix = core.getInput('workflow');
+    if (prefix !== '')
+        prefix += ' / ';
     return {
         owner: repoFullName[0],
         repo: repoFullName[1],
@@ -29302,7 +29306,7 @@ function unpackInputs() {
         inputs: JSON.parse(core.getInput('inputs')),
         jobs: JSON.parse(core.getInput('jobs')),
         head_sha: core.getInput('head_sha'),
-        prefix: core.getInput('workflow'),
+        prefix,
         needs: JSON.parse(core.getInput('needs'))
     };
 }

@@ -73,7 +73,7 @@ export default class Api {
     const checks: Record<string, CheckRun | undefined> = (
       await Promise.all(
         jobs.map(async job =>
-          this.createCheck(`${prefix}/${job}`, head_sha, run as WorkflowRun)
+          this.createCheck(`${prefix}${job}`, head_sha, run as WorkflowRun)
         )
       )
     ).reduce(
@@ -92,14 +92,14 @@ export default class Api {
           // NOTE: avoid forking self.
           .filter(job => job.html_url?.includes('/job/'))
           .map(async job => {
-            const check = checks[`${prefix}/${job.name}`];
+            const check = checks[`${prefix}${job.name}`];
             if (
               !check ||
               (check.status === job.status &&
                 check.conclusion === job.conclusion)
             ) {
               core.debug(`No need to update check ${job.name} .`);
-              return;
+              return job;
             } else {
               this.updateCheck(check.id, job);
               check.status =
@@ -221,6 +221,7 @@ export default class Api {
       requiredJobs.length !== needs.length ||
       requiredJobs.filter(job => job.status !== 'completed').length > 0
     ) {
+      core.info(`Waiting for ${needs} ...`);
       await wait(5000);
       return await this.getJobs(run_id, filter, needs);
     }

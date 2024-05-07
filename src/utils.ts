@@ -27,6 +27,9 @@ export function unpackInputs(): Inputs {
     process.exit(1);
   }
 
+  let prefix = core.getInput('workflow');
+  if (prefix !== '') prefix += ' / ';
+
   return {
     owner: repoFullName[0],
     repo: repoFullName[1],
@@ -35,7 +38,7 @@ export function unpackInputs(): Inputs {
     inputs: JSON.parse(core.getInput('inputs')),
     jobs: JSON.parse(core.getInput('jobs')),
     head_sha: core.getInput('head_sha'),
-    prefix: core.getInput('workflow'),
+    prefix,
     needs: JSON.parse(core.getInput('needs'))
   };
 }
