@@ -1,7 +1,7 @@
 {
   "name": "typescript-action",
   "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "author": "",
   "private": true,
   "homepage": "https://github.com/actions/typescript-action",
@@ -12,11 +12,7 @@
   "bugs": {
     "url": "https://github.com/actions/typescript-action/issues"
   },
-  "keywords": [
-    "actions",
-    "node",
-    "setup"
-  ],
+  "keywords": ["actions", "node", "setup"],
   "exports": {
     ".": "./dist/main.js"
   },

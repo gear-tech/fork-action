@@ -27,7 +27,7 @@ export function unpackInputs(): Inputs {
     process.exit(1);
   }
 
-  let prefix = core.getInput('workflow');
+  let prefix = core.getInput('prefix');
   if (prefix !== '') prefix += ' / ';
 
   return {
