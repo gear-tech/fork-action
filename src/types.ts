@@ -48,6 +48,12 @@ export interface ForkOptions {
   needs: string[];
 }
 
+/// Profile configs
+export interface IProfile {
+  name: string;
+  flags: string;
+}
+
 /// Unpacked action inputs.
 export interface Inputs extends ForkOptions {
   owner: string;

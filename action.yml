@@ -33,6 +33,9 @@ inputs:
   needs:
     description: 'The required jobs for the target jobs'
     default: '[]'
+  profiles:
+    description: 'The profiles field of the workflow inputs'
+    default: '[]'
 
 runs:
   using: node20
