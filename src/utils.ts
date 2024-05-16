@@ -41,7 +41,7 @@ export function unpackInputs(): Inputs {
     repo: repoFullName[1],
     ref: core.getInput('ref'),
     workflow_id: core.getInput('workflow_id'),
-    inputs: JSON.parse(core.getInput('inputs')),
+    inputs,
     jobs: JSON.parse(core.getInput('jobs')),
     head_sha: core.getInput('head_sha'),
     prefix,

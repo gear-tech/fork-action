@@ -35,7 +35,6 @@ inputs:
     default: '[]'
   profiles:
     description: 'The profiles field of the workflow inputs'
-    default: '[]'
 
 runs:
   using: node20
