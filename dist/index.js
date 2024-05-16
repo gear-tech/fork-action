@@ -29298,7 +29298,7 @@ function unpackInputs() {
     let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
-    let inputs = JSON.parse(core.getInput('inputs'));
+    const inputs = JSON.parse(core.getInput('inputs'));
     const profiles = core.getInput('profiles');
     if (profiles.length > 0) {
         inputs.profiles = profiles;
