@@ -51,8 +51,8 @@ function deriveInputs(): IInputsAndJobs {
   const useProfiles = core.getInput('useProfiles') === 'true';
   const useMulti = core.getInput('useMulti') === 'true';
 
-  console.info(JSON.stringify(github.context.payload.repository));
-  console.info(JSON.stringify(github.context.payload.pull_request));
+  console.info(JSON.stringify(github.context.payload.repository, null, 2));
+  console.info(JSON.stringify(github.context.payload.pull_request, null, 2));
   if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   // Detect labels
