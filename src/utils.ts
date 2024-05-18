@@ -50,10 +50,10 @@ function deriveInputs(): IInputsAndJobs {
   const inputs = JSON.parse(core.getInput('inputs'));
   const useProfiles = core.getInput('useProfiles') === 'true';
   const useMulti = core.getInput('useMulti') === 'true';
-  if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   console.info(JSON.stringify(github.context.payload.repository));
   console.info(JSON.stringify(github.context.payload.pull_request));
+  if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   // Detect labels
   const labels: string[] = JSON.parse(core.getInput('labels'));
