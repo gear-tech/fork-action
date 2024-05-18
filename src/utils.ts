@@ -1,3 +1,4 @@
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { Inputs, IProfile, IInputsAndJobs } from '@/types';
@@ -33,14 +34,18 @@ export function unpackInputs(): Inputs {
     process.exit(1);
   }
 
+  const {
+    head: { sha: head_sha, ref }
+  } = github.context.payload.pull_request as any;
+
   return {
     owner: repoFullName[0],
     repo: repoFullName[1],
-    ref: core.getInput('ref'),
+    ref,
     workflow_id: core.getInput('workflow_id'),
     inputs,
     jobs,
-    head_sha: core.getInput('head_sha'),
+    head_sha,
     prefix
   };
 }
@@ -50,13 +55,12 @@ function deriveInputs(): IInputsAndJobs {
   const inputs = JSON.parse(core.getInput('inputs'));
   const useProfiles = core.getInput('useProfiles') === 'true';
   const useMulti = core.getInput('useMulti') === 'true';
-
-  console.info(JSON.stringify(github.context.payload.repository, null, 2));
-  console.info(JSON.stringify(github.context.payload.pull_request, null, 2));
   if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   // Detect labels
-  const labels: string[] = JSON.parse(core.getInput('labels'));
+  const labels: string[] = github.context.payload.pull_request?.labels.map(
+    (l: any) => l.name
+  );
   const release = labels.includes('E3-forcerelease');
   const production = labels.includes('E4-forceproduction');
 

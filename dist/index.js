@@ -29269,6 +29269,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unpackInputs = exports.wait = void 0;
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 /*
@@ -29299,14 +29300,15 @@ function unpackInputs() {
         core.setFailed('repo needs to be in the {owner}/{repository} format.');
         process.exit(1);
     }
+    const { head: { sha: head_sha, ref } } = github.context.payload.pull_request;
     return {
         owner: repoFullName[0],
         repo: repoFullName[1],
-        ref: core.getInput('ref'),
+        ref,
         workflow_id: core.getInput('workflow_id'),
         inputs,
         jobs,
-        head_sha: core.getInput('head_sha'),
+        head_sha,
         prefix
     };
 }
@@ -29316,12 +29318,10 @@ function deriveInputs() {
     const inputs = JSON.parse(core.getInput('inputs'));
     const useProfiles = core.getInput('useProfiles') === 'true';
     const useMulti = core.getInput('useMulti') === 'true';
-    console.info(JSON.stringify(github.context.payload.repository, null, 2));
-    console.info(JSON.stringify(github.context.payload.pull_request, null, 2));
     if (!(useProfiles || useMulti))
         return { inputs, jobs };
     // Detect labels
-    const labels = JSON.parse(core.getInput('labels'));
+    const labels = github.context.payload.pull_request?.labels.map((l) => l.name);
     const release = labels.includes('E3-forcerelease');
     const production = labels.includes('E4-forceproduction');
     // Append profiles to inputs
