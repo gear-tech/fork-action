@@ -68,7 +68,7 @@ function deriveInputs(): IInputsAndJobs {
   if (useProfiles) {
     const profiles: IProfile[] = [{ name: 'debug', flags: '' }];
     if (release) profiles.push({ name: 'release', flags: '--release' });
-    inputs.profiles = profiles;
+    inputs.profiles = JSON.stringify(profiles);
   }
 
   if (useMulti) {
