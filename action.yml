@@ -30,12 +30,6 @@ inputs:
     description: 'The prefix of the check'
     required: true
     default: ''
-  release:
-    description: 'If enable release build'
-    default: false
-  production:
-    description: 'If enable production build'
-    default: false
   useProfiles:
     description: 'If generate profiles'
     default: false

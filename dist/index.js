@@ -29091,7 +29091,7 @@ class Api {
         }
         // Check if forked jobs are processed.
         const forkedJobs = jobs.filter(job => filter.includes(job.name));
-        if (forkedJobs.length != filter.length) {
+        if (forkedJobs.length !== filter.length) {
             core.info(`Waiting for ${filter} ...`);
             await (0, utils_1.wait)(5000);
             return await this.getJobs(run_id, filter);
@@ -29314,12 +29314,14 @@ exports.unpackInputs = unpackInputs;
 function deriveInputs() {
     let jobs = JSON.parse(core.getInput('jobs'));
     const inputs = JSON.parse(core.getInput('inputs'));
-    const useProfiles = core.getInput('useProfiles') == 'true';
-    const useMulti = core.getInput('useMulti') == 'true';
+    const useProfiles = core.getInput('useProfiles') === 'true';
+    const useMulti = core.getInput('useMulti') === 'true';
     if (!(useProfiles || useMulti))
         return { inputs, jobs };
     // Detect labels
-    const labels = github_1.default.context.payload.labels.map((l) => l.name);
+    const labels = github_1.default.context.payload.labels.map(
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    (l) => l.name);
     const release = labels.includes('E3-forcerelease');
     const production = labels.includes('E4-forceproduction');
     // Append profiles to inputs
@@ -29338,12 +29340,12 @@ function deriveInputs() {
     // Derive Jobs
     if (release) {
         jobs = [
-            ...jobs.map(j => j + ' (debug)'),
-            ...jobs.map(j => j + ' (release)')
+            ...jobs.map(j => `${j} (debug)`),
+            ...jobs.map(j => `${j} (release)`)
         ];
     }
     else {
-        jobs = [...jobs.map(j => j + ' (debug)')];
+        jobs = [...jobs.map(j => `${j} (debug)`)];
     }
     return {
         inputs,
