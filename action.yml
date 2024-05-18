@@ -36,10 +36,10 @@ inputs:
   production:
     description: 'If enable production build'
     default: false
-  profiles:
+  useProfiles:
     description: 'If generate profiles'
     default: false
-  multi:
+  useMulti:
     description: 'If enable multi build fields'
     default: false
 

@@ -46,6 +46,11 @@ export interface ForkOptions {
   head_sha: string;
 }
 
+export interface IInputsAndJobs {
+  inputs: Record<string, any>;
+  jobs: string[];
+}
+
 /// Profile configs
 export interface IProfile {
   name: string;

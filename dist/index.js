@@ -29293,43 +29293,12 @@ exports.wait = wait;
  * Unpack inputs from environment.
  */
 function unpackInputs() {
+    const { inputs, jobs } = deriveInputs();
     const owner = github_1.default.context.payload.repository?.owner.name;
     const repo = github_1.default.context.payload.repository?.name;
     let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
-    const inputs = JSON.parse(core.getInput('inputs'));
-    const release = core.getInput('release') == 'true';
-    const production = core.getInput('production') == 'true';
-    const profiles = core.getInput('profiles') == 'true';
-    const multi = core.getInput('multi') == 'true';
-    // Insert profiles field
-    if (profiles) {
-        const profilesField = [{ name: 'debug', flags: '' }];
-        if (release)
-            profilesField.push({ name: 'release', flags: '--release' });
-        inputs.profiles = profilesField;
-    }
-    // Insert multi buld field
-    if (multi) {
-        if (release)
-            inputs.release = 'true';
-        if (production)
-            inputs.production = 'true';
-    }
-    // Generate matrix jobs
-    let jobs = JSON.parse(core.getInput('jobs'));
-    if (profiles || multi) {
-        if (release) {
-            jobs = [
-                ...jobs.map(j => j + ' (debug)'),
-                ...jobs.map(j => j + ' (release)')
-            ];
-        }
-        else {
-            jobs = [...jobs.map(j => j + ' (debug)')];
-        }
-    }
     return {
         owner: owner ? owner : 'gear-tech',
         repo: repo ? repo : 'gear',
@@ -29342,6 +29311,45 @@ function unpackInputs() {
     };
 }
 exports.unpackInputs = unpackInputs;
+function deriveInputs() {
+    let jobs = JSON.parse(core.getInput('jobs'));
+    const inputs = JSON.parse(core.getInput('inputs'));
+    const useProfiles = core.getInput('useProfiles') == 'true';
+    const useMulti = core.getInput('useMulti') == 'true';
+    if (!(useProfiles || useMulti))
+        return { inputs, jobs };
+    // Detect labels
+    const labels = github_1.default.context.payload.labels.map((l) => l.name);
+    const release = labels.includes('E3-forcerelease');
+    const production = labels.includes('E4-forceproduction');
+    // Append profiles to inputs
+    if (useProfiles) {
+        const profiles = [{ name: 'debug', flags: '' }];
+        if (release)
+            profiles.push({ name: 'release', flags: '--release' });
+        inputs.profiles = profiles;
+    }
+    if (useMulti) {
+        if (release)
+            inputs.release = 'true';
+        if (production)
+            inputs.production = 'true';
+    }
+    // Derive Jobs
+    if (release) {
+        jobs = [
+            ...jobs.map(j => j + ' (debug)'),
+            ...jobs.map(j => j + ' (release)')
+        ];
+    }
+    else {
+        jobs = [...jobs.map(j => j + ' (debug)')];
+    }
+    return {
+        inputs,
+        jobs
+    };
+}
 
 
 /***/ }),

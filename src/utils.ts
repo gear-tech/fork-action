@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import { Inputs, IProfile } from '@/types';
+import { Inputs, IProfile, IInputsAndJobs } from '@/types';
 import github from '@actions/github';
 
 /*
@@ -22,43 +22,12 @@ export async function wait(milliseconds: number): Promise<string> {
  * Unpack inputs from environment.
  */
 export function unpackInputs(): Inputs {
+  const { inputs, jobs } = deriveInputs();
   const owner = github.context.payload.repository?.owner.name;
   const repo = github.context.payload.repository?.name;
 
   let prefix = core.getInput('prefix');
   if (prefix !== '') prefix += ' / ';
-
-  const inputs = JSON.parse(core.getInput('inputs'));
-  const release = core.getInput('release') == 'true';
-  const production = core.getInput('production') == 'true';
-  const profiles = core.getInput('profiles') == 'true';
-  const multi = core.getInput('multi') == 'true';
-
-  // Insert profiles field
-  if (profiles) {
-    const profilesField: IProfile[] = [{ name: 'debug', flags: '' }];
-    if (release) profilesField.push({ name: 'release', flags: '--release' });
-    inputs.profiles = profilesField;
-  }
-
-  // Insert multi buld field
-  if (multi) {
-    if (release) inputs.release = 'true';
-    if (production) inputs.production = 'true';
-  }
-
-  // Generate matrix jobs
-  let jobs: string[] = JSON.parse(core.getInput('jobs'));
-  if (profiles || multi) {
-    if (release) {
-      jobs = [
-        ...jobs.map(j => j + ' (debug)'),
-        ...jobs.map(j => j + ' (release)')
-      ];
-    } else {
-      jobs = [...jobs.map(j => j + ' (debug)')];
-    }
-  }
 
   return {
     owner: owner ? owner : 'gear-tech',
@@ -69,5 +38,47 @@ export function unpackInputs(): Inputs {
     jobs,
     head_sha: github.context.payload.head.sha,
     prefix
+  };
+}
+
+function deriveInputs(): IInputsAndJobs {
+  let jobs: string[] = JSON.parse(core.getInput('jobs'));
+  const inputs = JSON.parse(core.getInput('inputs'));
+  const useProfiles = core.getInput('useProfiles') == 'true';
+  const useMulti = core.getInput('useMulti') == 'true';
+  if (!(useProfiles || useMulti)) return { inputs, jobs };
+
+  // Detect labels
+  const labels: string[] = github.context.payload.labels.map(
+    (l: any) => l.name
+  );
+  const release = labels.includes('E3-forcerelease');
+  const production = labels.includes('E4-forceproduction');
+
+  // Append profiles to inputs
+  if (useProfiles) {
+    const profiles: IProfile[] = [{ name: 'debug', flags: '' }];
+    if (release) profiles.push({ name: 'release', flags: '--release' });
+    inputs.profiles = profiles;
+  }
+
+  if (useMulti) {
+    if (release) inputs.release = 'true';
+    if (production) inputs.production = 'true';
+  }
+
+  // Derive Jobs
+  if (release) {
+    jobs = [
+      ...jobs.map(j => j + ' (debug)'),
+      ...jobs.map(j => j + ' (release)')
+    ];
+  } else {
+    jobs = [...jobs.map(j => j + ' (debug)')];
+  }
+
+  return {
+    inputs,
+    jobs
   };
 }
