@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
-import { Inputs } from '@/types';
+import { Inputs, IProfile } from '@/types';
+import github from '@actions/github';
 
 /*
  * Wait for a number of milliseconds.
@@ -21,29 +22,52 @@ export async function wait(milliseconds: number): Promise<string> {
  * Unpack inputs from environment.
  */
 export function unpackInputs(): Inputs {
-  const repoFullName = core.getInput('repo').split('/');
-  if (repoFullName.length !== 2) {
-    core.setFailed('repo needs to be in the {owner}/{repository} format.');
-    process.exit(1);
-  }
+  const owner = github.context.payload.repository?.owner.name;
+  const repo = github.context.payload.repository?.name;
 
   let prefix = core.getInput('prefix');
   if (prefix !== '') prefix += ' / ';
 
   const inputs = JSON.parse(core.getInput('inputs'));
-  const profiles = core.getInput('profiles');
-  if (profiles.length > 0) {
-    inputs.profiles = profiles;
+  const release = core.getInput('release') == 'true';
+  const production = core.getInput('production') == 'true';
+  const profiles = core.getInput('profiles') == 'true';
+  const multi = core.getInput('multi') == 'true';
+
+  // Insert profiles field
+  if (profiles) {
+    const profilesField: IProfile[] = [{ name: 'debug', flags: '' }];
+    if (release) profilesField.push({ name: 'release', flags: '--release' });
+    inputs.profiles = profilesField;
+  }
+
+  // Insert multi buld field
+  if (multi) {
+    if (release) inputs.release = 'true';
+    if (production) inputs.production = 'true';
+  }
+
+  // Generate matrix jobs
+  let jobs: string[] = JSON.parse(core.getInput('jobs'));
+  if (profiles || multi) {
+    if (release) {
+      jobs = [
+        ...jobs.map(j => j + ' (debug)'),
+        ...jobs.map(j => j + ' (release)')
+      ];
+    } else {
+      jobs = [...jobs.map(j => j + ' (debug)')];
+    }
   }
 
   return {
-    owner: repoFullName[0],
-    repo: repoFullName[1],
-    ref: core.getInput('ref'),
+    owner: owner ? owner : 'gear-tech',
+    repo: repo ? repo : 'gear',
+    ref: github.context.payload.head.ref,
     workflow_id: core.getInput('workflow_id'),
     inputs,
-    jobs: JSON.parse(core.getInput('jobs')),
-    head_sha: core.getInput('head_sha'),
+    jobs,
+    head_sha: github.context.payload.head.sha,
     prefix
   };
 }
