@@ -29270,6 +29270,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unpackInputs = exports.wait = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
 /*
  * Wait for a number of milliseconds.
  *
@@ -29317,6 +29318,8 @@ function deriveInputs() {
     const useMulti = core.getInput('useMulti') === 'true';
     if (!(useProfiles || useMulti))
         return { inputs, jobs };
+    console.info(JSON.stringify(github.context.payload.repository));
+    console.info(JSON.stringify(github.context.payload.pull_request));
     // Detect labels
     const labels = JSON.parse(core.getInput('labels'));
     const release = labels.includes('E3-forcerelease');
