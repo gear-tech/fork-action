@@ -57,8 +57,7 @@ export default class Api {
     inputs,
     prefix,
     jobs,
-    head_sha,
-    needs
+    head_sha
   }: ForkOptions): Promise<void> {
     // If the workflow has already been dispatched, create
     // checks from the exist one.
@@ -88,7 +87,7 @@ export default class Api {
     core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
     for (;;) {
       const _jobs = await Promise.all(
-        (await this.getJobs(run.id, jobs, needs))
+        (await this.getJobs(run.id, jobs))
           // NOTE: avoid forking self.
           .filter(job => job.html_url?.includes('/job/'))
           .map(async job => {
@@ -197,11 +196,7 @@ export default class Api {
    * @param {string[]} filter - Job names to be filtered out.
    * @returns {Promise<Job[]>} - Jobs of a workflow run.
    */
-  async getJobs(
-    run_id: number,
-    filter: string[],
-    needs: string[]
-  ): Promise<Job[]> {
+  async getJobs(run_id: number, filter: string[]): Promise<Job[]> {
     const {
       data: { jobs }
     } = await this.octokit.rest.actions.listJobsForWorkflowRun({
@@ -215,15 +210,12 @@ export default class Api {
       process.exit(1);
     }
 
-    // Check if required jobs are processed.
-    const requiredJobs = jobs.filter(job => needs.includes(job.name));
-    if (
-      requiredJobs.length !== needs.length ||
-      requiredJobs.filter(job => job.status !== 'completed').length > 0
-    ) {
-      core.info(`Waiting for ${needs} ...`);
+    // Check if forked jobs are processed.
+    const forkedJobs = jobs.filter(job => filter.includes(job.name));
+    if (forkedJobs.length != filter.length) {
+      core.info(`Waiting for ${filter} ...`);
       await wait(5000);
-      return await this.getJobs(run_id, filter, needs);
+      return await this.getJobs(run_id, filter);
     }
 
     return jobs.filter(job => filter.includes(job.name));

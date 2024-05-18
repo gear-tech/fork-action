@@ -28972,7 +28972,7 @@ class Api {
      * @params {ForkOptions} - The fork options.
      * @returns {Promise<void>}
      */
-    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha, needs }) {
+    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
@@ -28990,7 +28990,7 @@ class Api {
         // Fork status of jobs from the workflow.
         core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
         for (;;) {
-            const _jobs = await Promise.all((await this.getJobs(run.id, jobs, needs))
+            const _jobs = await Promise.all((await this.getJobs(run.id, jobs))
                 // NOTE: avoid forking self.
                 .filter(job => job.html_url?.includes('/job/'))
                 .map(async (job) => {
@@ -29079,7 +29079,7 @@ class Api {
      * @param {string[]} filter - Job names to be filtered out.
      * @returns {Promise<Job[]>} - Jobs of a workflow run.
      */
-    async getJobs(run_id, filter, needs) {
+    async getJobs(run_id, filter) {
         const { data: { jobs } } = await this.octokit.rest.actions.listJobsForWorkflowRun({
             owner: this.owner,
             repo: this.repo,
@@ -29089,13 +29089,12 @@ class Api {
             core.setFailed(`No workflow is found from ${run_id}`);
             process.exit(1);
         }
-        // Check if required jobs are processed.
-        const requiredJobs = jobs.filter(job => needs.includes(job.name));
-        if (requiredJobs.length !== needs.length ||
-            requiredJobs.filter(job => job.status !== 'completed').length > 0) {
-            core.info(`Waiting for ${needs} ...`);
+        // Check if forked jobs are processed.
+        const forkedJobs = jobs.filter(job => filter.includes(job.name));
+        if (forkedJobs.length != filter.length) {
+            core.info(`Waiting for ${filter} ...`);
             await (0, utils_1.wait)(5000);
-            return await this.getJobs(run_id, filter, needs);
+            return await this.getJobs(run_id, filter);
         }
         return jobs.filter(job => filter.includes(job.name));
     }
@@ -29311,8 +29310,7 @@ function unpackInputs() {
         inputs,
         jobs: JSON.parse(core.getInput('jobs')),
         head_sha: core.getInput('head_sha'),
-        prefix,
-        needs: JSON.parse(core.getInput('needs'))
+        prefix
     };
 }
 exports.unpackInputs = unpackInputs;

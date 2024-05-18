@@ -44,8 +44,6 @@ export interface ForkOptions {
   jobs: string[];
   // The commit hash to fork.
   head_sha: string;
-  // Required jobs.
-  needs: string[];
 }
 
 /// Profile configs

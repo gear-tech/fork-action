@@ -30,9 +30,6 @@ inputs:
     description: 'The git reference of the target workflow.'
     required: true
     default: 'master'
-  needs:
-    description: 'The required jobs for the target jobs'
-    default: '[]'
   profiles:
     description: 'The profiles field of the workflow inputs'
 
