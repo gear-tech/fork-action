@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import { Inputs, IProfile, IInputsAndJobs } from '@/types';
-import github from '@actions/github';
 
 /*
  * Wait for a number of milliseconds.
@@ -23,20 +22,24 @@ export async function wait(milliseconds: number): Promise<string> {
  */
 export function unpackInputs(): Inputs {
   const { inputs, jobs } = deriveInputs();
-  const owner = github.context.payload.repository?.owner.name;
-  const repo = github.context.payload.repository?.name;
 
   let prefix = core.getInput('prefix');
   if (prefix !== '') prefix += ' / ';
 
+  const repoFullName = core.getInput('repo').split('/');
+  if (repoFullName.length !== 2) {
+    core.setFailed('repo needs to be in the {owner}/{repository} format.');
+    process.exit(1);
+  }
+
   return {
-    owner: owner ? owner : 'gear-tech',
-    repo: repo ? repo : 'gear',
-    ref: github.context.payload.head.ref,
+    owner: repoFullName[0],
+    repo: repoFullName[1],
+    ref: core.getInput('ref'),
     workflow_id: core.getInput('workflow_id'),
     inputs,
     jobs,
-    head_sha: github.context.payload.head.sha,
+    head_sha: core.getInput('head_sha'),
     prefix
   };
 }
@@ -49,10 +52,7 @@ function deriveInputs(): IInputsAndJobs {
   if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   // Detect labels
-  const labels: string[] = github.context.payload.labels.map(
-    /* eslint-disable  @typescript-eslint/no-explicit-any */
-    (l: any) => l.name as string
-  );
+  const labels: string[] = JSON.parse(core.getInput('labels'));
   const release = labels.includes('E3-forcerelease');
   const production = labels.includes('E4-forceproduction');
 

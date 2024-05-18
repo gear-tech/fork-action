@@ -29267,13 +29267,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unpackInputs = exports.wait = void 0;
 const core = __importStar(__nccwpck_require__(2186));
-const github_1 = __importDefault(__nccwpck_require__(5438));
 /*
  * Wait for a number of milliseconds.
  *
@@ -29294,19 +29290,22 @@ exports.wait = wait;
  */
 function unpackInputs() {
     const { inputs, jobs } = deriveInputs();
-    const owner = github_1.default.context.payload.repository?.owner.name;
-    const repo = github_1.default.context.payload.repository?.name;
     let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
+    const repoFullName = core.getInput('repo').split('/');
+    if (repoFullName.length !== 2) {
+        core.setFailed('repo needs to be in the {owner}/{repository} format.');
+        process.exit(1);
+    }
     return {
-        owner: owner ? owner : 'gear-tech',
-        repo: repo ? repo : 'gear',
-        ref: github_1.default.context.payload.head.ref,
+        owner: repoFullName[0],
+        repo: repoFullName[1],
+        ref: core.getInput('ref'),
         workflow_id: core.getInput('workflow_id'),
         inputs,
         jobs,
-        head_sha: github_1.default.context.payload.head.sha,
+        head_sha: core.getInput('head_sha'),
         prefix
     };
 }
@@ -29319,9 +29318,7 @@ function deriveInputs() {
     if (!(useProfiles || useMulti))
         return { inputs, jobs };
     // Detect labels
-    const labels = github_1.default.context.payload.labels.map(
-    /* eslint-disable  @typescript-eslint/no-explicit-any */
-    (l) => l.name);
+    const labels = JSON.parse(core.getInput('labels'));
     const release = labels.includes('E3-forcerelease');
     const production = labels.includes('E4-forceproduction');
     // Append profiles to inputs
