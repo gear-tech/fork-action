@@ -47,6 +47,7 @@ export interface ForkOptions {
 }
 
 export interface IInputsAndJobs {
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
   inputs: Record<string, any>;
   jobs: string[];
 }

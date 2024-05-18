@@ -44,13 +44,14 @@ export function unpackInputs(): Inputs {
 function deriveInputs(): IInputsAndJobs {
   let jobs: string[] = JSON.parse(core.getInput('jobs'));
   const inputs = JSON.parse(core.getInput('inputs'));
-  const useProfiles = core.getInput('useProfiles') == 'true';
-  const useMulti = core.getInput('useMulti') == 'true';
+  const useProfiles = core.getInput('useProfiles') === 'true';
+  const useMulti = core.getInput('useMulti') === 'true';
   if (!(useProfiles || useMulti)) return { inputs, jobs };
 
   // Detect labels
   const labels: string[] = github.context.payload.labels.map(
-    (l: any) => l.name
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    (l: any) => l.name as string
   );
   const release = labels.includes('E3-forcerelease');
   const production = labels.includes('E4-forceproduction');
@@ -70,11 +71,11 @@ function deriveInputs(): IInputsAndJobs {
   // Derive Jobs
   if (release) {
     jobs = [
-      ...jobs.map(j => j + ' (debug)'),
-      ...jobs.map(j => j + ' (release)')
+      ...jobs.map(j => `${j} (debug)`),
+      ...jobs.map(j => `${j} (release)`)
     ];
   } else {
-    jobs = [...jobs.map(j => j + ' (debug)')];
+    jobs = [...jobs.map(j => `${j} (debug)`)];
   }
 
   return {
