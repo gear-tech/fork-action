@@ -29091,7 +29091,7 @@ class Api {
         }
         // Check if forked jobs are processed.
         const forkedJobs = jobs.filter(job => filter.includes(job.name));
-        if (forkedJobs.length !== filter.length) {
+        if (forkedJobs.length < filter.length) {
             core.info(`Waiting for ${filter} ...`);
             await (0, utils_1.wait)(5000);
             return await this.getJobs(run_id, filter);
