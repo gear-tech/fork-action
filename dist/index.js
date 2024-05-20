@@ -28972,7 +28972,7 @@ class Api {
      * @params {ForkOptions} - The fork options.
      * @returns {Promise<void>}
      */
-    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha, needs }) {
+    async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
@@ -28990,7 +28990,7 @@ class Api {
         // Fork status of jobs from the workflow.
         core.info(`Forking status of ${jobs} from ${run.html_url} ...`);
         for (;;) {
-            const _jobs = await Promise.all((await this.getJobs(run.id, jobs, needs))
+            const _jobs = await Promise.all((await this.getJobs(run.id, jobs))
                 // NOTE: avoid forking self.
                 .filter(job => job.html_url?.includes('/job/'))
                 .map(async (job) => {
@@ -29079,7 +29079,7 @@ class Api {
      * @param {string[]} filter - Job names to be filtered out.
      * @returns {Promise<Job[]>} - Jobs of a workflow run.
      */
-    async getJobs(run_id, filter, needs) {
+    async getJobs(run_id, filter) {
         const { data: { jobs } } = await this.octokit.rest.actions.listJobsForWorkflowRun({
             owner: this.owner,
             repo: this.repo,
@@ -29089,13 +29089,12 @@ class Api {
             core.setFailed(`No workflow is found from ${run_id}`);
             process.exit(1);
         }
-        // Check if required jobs are processed.
-        const requiredJobs = jobs.filter(job => needs.includes(job.name));
-        if (requiredJobs.length !== needs.length ||
-            requiredJobs.filter(job => job.status !== 'completed').length > 0) {
-            core.info(`Waiting for ${needs} ...`);
+        // Check if forked jobs are processed.
+        const forkedJobs = jobs.filter(job => filter.includes(job.name));
+        if (forkedJobs.length < filter.length) {
+            core.info(`Waiting for ${filter} ...`);
             await (0, utils_1.wait)(5000);
-            return await this.getJobs(run_id, filter, needs);
+            return await this.getJobs(run_id, filter);
         }
         return jobs.filter(job => filter.includes(job.name));
     }
@@ -29270,7 +29269,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unpackInputs = exports.wait = void 0;
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
 /*
  * Wait for a number of milliseconds.
  *
@@ -29290,27 +29291,64 @@ exports.wait = wait;
  * Unpack inputs from environment.
  */
 function unpackInputs() {
-    const repoFullName = core.getInput('repo').split('/');
-    if (repoFullName.length !== 2) {
-        core.setFailed('repo needs to be in the {owner}/{repository} format.');
-        process.exit(1);
-    }
+    const { inputs, jobs } = deriveInputs();
     let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
+    const { head: { sha: head_sha, ref } } = github.context.payload.pull_request;
+    const owner = github.context.payload.repository?.owner.login;
+    const repo = github.context.payload.repository?.name;
     return {
-        owner: repoFullName[0],
-        repo: repoFullName[1],
-        ref: core.getInput('ref'),
+        owner: owner ? owner : 'gear-tech',
+        repo: repo ? repo : 'gear',
+        ref,
         workflow_id: core.getInput('workflow_id'),
-        inputs: JSON.parse(core.getInput('inputs')),
-        jobs: JSON.parse(core.getInput('jobs')),
-        head_sha: core.getInput('head_sha'),
-        prefix,
-        needs: JSON.parse(core.getInput('needs'))
+        inputs,
+        jobs,
+        head_sha,
+        prefix
     };
 }
 exports.unpackInputs = unpackInputs;
+function deriveInputs() {
+    let jobs = JSON.parse(core.getInput('jobs'));
+    const inputs = JSON.parse(core.getInput('inputs'));
+    const useProfiles = core.getInput('useProfiles') === 'true';
+    const useMulti = core.getInput('useMulti') === 'true';
+    if (!(useProfiles || useMulti))
+        return { inputs, jobs };
+    // Detect labels
+    const labels = github.context.payload.pull_request?.labels.map((l) => l.name);
+    const release = labels.includes('E3-forcerelease');
+    const production = labels.includes('E4-forceproduction');
+    // Append profiles to inputs
+    if (useProfiles) {
+        const profiles = [{ name: 'debug', flags: '' }];
+        if (release)
+            profiles.push({ name: 'release', flags: '--release' });
+        inputs.profiles = JSON.stringify(profiles);
+    }
+    if (useMulti) {
+        if (release)
+            inputs.release = 'true';
+        if (production)
+            inputs.production = 'true';
+    }
+    // Derive Jobs
+    if (release) {
+        jobs = [
+            ...jobs.map(j => `${j} (debug)`),
+            ...jobs.map(j => `${j} (release)`)
+        ];
+    }
+    else {
+        jobs = [...jobs.map(j => `${j} (debug)`)];
+    }
+    return {
+        inputs,
+        jobs
+    };
+}
 
 
 /***/ }),

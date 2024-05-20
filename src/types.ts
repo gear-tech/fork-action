@@ -44,8 +44,18 @@ export interface ForkOptions {
   jobs: string[];
   // The commit hash to fork.
   head_sha: string;
-  // Required jobs.
-  needs: string[];
+}
+
+export interface IInputsAndJobs {
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
+  inputs: Record<string, any>;
+  jobs: string[];
+}
+
+/// Profile configs
+export interface IProfile {
+  name: string;
+  flags: string;
 }
 
 /// Unpacked action inputs.

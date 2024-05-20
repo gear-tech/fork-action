@@ -11,9 +11,6 @@ inputs:
   jobs:
     description: 'The jobs to be forked from the jobs of target workflow.'
     required: true
-  head_sha:
-    description: 'The target commit that creates checks on.'
-    required: true
   inputs:
     description: 'The inputs of the target workflow'
     required: true
@@ -22,17 +19,15 @@ inputs:
     description: 'The prefix of the check'
     required: true
     default: ''
-  repo:
-    description: 'The full name of the github repo.'
-    required: true
-    default: 'gear-tech/gear'
-  ref:
-    description: 'The git reference of the target workflow.'
-    required: true
-    default: 'master'
-  needs:
-    description: 'The required jobs for the target jobs'
+  labels:
+    description: 'Current Labels for detecting profiles'
     default: '[]'
+  useProfiles:
+    description: 'If generate profiles'
+    default: false
+  useMulti:
+    description: 'If enable multi build fields'
+    default: false
 
 runs:
   using: node20
