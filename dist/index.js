@@ -29296,7 +29296,6 @@ function unpackInputs() {
     if (prefix !== '')
         prefix += ' / ';
     const { head: { sha: head_sha, ref } } = github.context.payload.pull_request;
-    console.log(github.context.payload.repository);
     const owner = github.context.payload.repository?.owner.login;
     const repo = github.context.payload.repository?.name;
     return {

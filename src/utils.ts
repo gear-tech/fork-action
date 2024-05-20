@@ -32,7 +32,6 @@ export function unpackInputs(): Inputs {
     head: { sha: head_sha, ref }
   } = github.context.payload.pull_request as any;
 
-  console.log(github.context.payload.repository);
   const owner = github.context.payload.repository?.owner.login;
   const repo = github.context.payload.repository?.name;
 
