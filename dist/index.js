@@ -29295,15 +29295,13 @@ function unpackInputs() {
     let prefix = core.getInput('prefix');
     if (prefix !== '')
         prefix += ' / ';
-    const repoFullName = core.getInput('repo').split('/');
-    if (repoFullName.length !== 2) {
-        core.setFailed('repo needs to be in the {owner}/{repository} format.');
-        process.exit(1);
-    }
     const { head: { sha: head_sha, ref } } = github.context.payload.pull_request;
+    console.log(github.context.payload.repository);
+    const owner = github.context.payload.repository?.owner.login;
+    const repo = github.context.payload.repository?.name;
     return {
-        owner: repoFullName[0],
-        repo: repoFullName[1],
+        owner: owner ? owner : 'gear-tech',
+        repo: repo ? repo : 'gear',
         ref,
         workflow_id: core.getInput('workflow_id'),
         inputs,

@@ -11,17 +11,6 @@ inputs:
   jobs:
     description: 'The jobs to be forked from the jobs of target workflow.'
     required: true
-  repo:
-    description: 'The full name of the source github repo.'
-    required: true
-    default: 'gear-tech/gear'
-  # ref:
-  #   description: 'The git reference of the target workflow.'
-  #   required: true
-  #   default: 'master'
-  # head_sha:
-  #   description: 'The target commit that creates checks on.'
-  #   required: true
   inputs:
     description: 'The inputs of the target workflow'
     required: true
