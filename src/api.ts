@@ -145,7 +145,7 @@ export default class Api {
       status: 'in_progress',
       output: {
         title: name,
-        summary: `Forked from ${run.html_url}\nRe-run the job ${sourceHtml()} to re-trigger this check.`
+        summary: `Forked from ${run.html_url}\nRe-run the \`${github.context.job}\` job in ${sourceHtml()} to re-trigger this check.`
       },
       head_sha
     });

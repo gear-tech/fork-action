@@ -29038,7 +29038,7 @@ class Api {
             status: 'in_progress',
             output: {
                 title: name,
-                summary: `Forked from ${run.html_url}\nRe-run the job ${(0, utils_1.sourceHtml)()} to re-trigger this check.`
+                summary: `Forked from ${run.html_url}\nRe-run the \`${github.context.job}\` job in ${(0, utils_1.sourceHtml)()} to re-trigger this check.`
             },
             head_sha
         });
@@ -29353,7 +29353,7 @@ function deriveInputs() {
 }
 function sourceHtml() {
     const context = github.context;
-    return `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/jobs/${context.job}`;
+    return `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 }
 exports.sourceHtml = sourceHtml;
 
