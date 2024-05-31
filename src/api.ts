@@ -15,7 +15,7 @@ import {
   WorkflowInputs,
   WorkflowRun
 } from '@/types';
-import { wait } from '@/utils';
+import { wait, sourceHtml } from '@/utils';
 
 /**
  * API wrapper for the fork action and related usages.
@@ -118,6 +118,13 @@ export default class Api {
         _jobs.filter(job => job?.status === 'completed').length === jobs.length
       ) {
         core.info('All jobs completed .');
+
+        const failed = _jobs.filter(job => job.conclusion === 'failure');
+        if (failed.length > 0) {
+          core.error(`Job ${failed[0].name} Failed`);
+          process.exit(1);
+        }
+
         return;
       } else {
         await wait(10000);
@@ -145,7 +152,7 @@ export default class Api {
       status: 'in_progress',
       output: {
         title: name,
-        summary: `Forked from ${run.html_url}`
+        summary: `Forked from ${run.html_url}\nRe-run the \`${github.context.job}\` job in ${sourceHtml()} to re-trigger this check.`
       },
       head_sha
     });
@@ -267,7 +274,15 @@ export default class Api {
       );
     });
 
-    return runs[0];
+    const run = runs[0];
+
+    // Here we re-trigger a new workflow if the previous one
+    // is completed and failure.
+    if (run.status === 'completed' && run.conclusion === 'failure') {
+      return undefined;
+    }
+
+    return run;
   }
 
   /**
@@ -299,11 +314,7 @@ export default class Api {
       repo: this.repo,
       check_run_id,
       status,
-      conclusion,
-      output: {
-        title: job.name,
-        summary: `Forked from ${job.html_url}`
-      }
+      conclusion
     });
 
     return data;
