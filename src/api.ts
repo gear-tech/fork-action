@@ -118,6 +118,13 @@ export default class Api {
         _jobs.filter(job => job?.status === 'completed').length === jobs.length
       ) {
         core.info('All jobs completed .');
+
+        const failed = _jobs.filter(job => job.conclusion === 'failure');
+        if (failed.length > 0) {
+          core.error(`Job ${failed[0].name} Failed`);
+          process.exit(1);
+        }
+
         return;
       } else {
         await wait(10000);
