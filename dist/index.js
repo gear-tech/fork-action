@@ -29038,7 +29038,8 @@ class Api {
             status: 'in_progress',
             output: {
                 title: name,
-                summary: `Forked from ${run.html_url}`
+                summary: `Forked from ${run.html_url}\n
+                  Rerun the check in ${(0, utils_1.sourceHtml)()} to re-trigger this check.`
             },
             head_sha
         });
@@ -29137,7 +29138,13 @@ class Api {
         const runs = workflow_runs.sort((a, b) => {
             return (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         });
-        return runs[0];
+        const workflow = runs[0];
+        // Here we allows re-trigger a new workflow if the previous one
+        // is completed and not success.
+        if (workflow.status === 'completed' && workflow.conclusion === 'failure') {
+            return undefined;
+        }
+        return workflow;
     }
     /**
      * Update a check run from jobs.
@@ -29164,11 +29171,7 @@ class Api {
             repo: this.repo,
             check_run_id,
             status,
-            conclusion,
-            output: {
-                title: job.name,
-                summary: `Forked from ${job.html_url}`
-            }
+            conclusion
         });
         return data;
     }
@@ -29268,7 +29271,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.unpackInputs = exports.wait = void 0;
+exports.sourceHtml = exports.unpackInputs = exports.wait = void 0;
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
@@ -29349,6 +29352,18 @@ function deriveInputs() {
         jobs
     };
 }
+function sourceHtml() {
+    const context = github.context;
+    const html = context.serverUrl +
+        '/' +
+        context.repo.owner +
+        '/' +
+        context.repo.repo +
+        '/actions/runs/' +
+        context.runId;
+    return html;
+}
+exports.sourceHtml = sourceHtml;
 
 
 /***/ }),

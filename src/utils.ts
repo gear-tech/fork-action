@@ -88,3 +88,17 @@ function deriveInputs(): IInputsAndJobs {
     jobs
   };
 }
+
+export function sourceHtml(): string {
+  const context = github.context;
+  const html =
+    context.serverUrl +
+    '/' +
+    context.repo.owner +
+    '/' +
+    context.repo.repo +
+    '/actions/runs/' +
+    context.runId;
+
+  return html;
+}

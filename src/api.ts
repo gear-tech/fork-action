@@ -15,7 +15,7 @@ import {
   WorkflowInputs,
   WorkflowRun
 } from '@/types';
-import { wait } from '@/utils';
+import { wait, sourceHtml } from '@/utils';
 
 /**
  * API wrapper for the fork action and related usages.
@@ -145,7 +145,8 @@ export default class Api {
       status: 'in_progress',
       output: {
         title: name,
-        summary: `Forked from ${run.html_url}`
+        summary: `Forked from ${run.html_url}\n
+                  Rerun the check in ${sourceHtml()} to re-trigger this check.`
       },
       head_sha
     });
@@ -267,7 +268,15 @@ export default class Api {
       );
     });
 
-    return runs[0];
+    const workflow = runs[0];
+
+    // Here we allows re-trigger a new workflow if the previous one
+    // is completed and not success.
+    if (workflow.status === 'completed' && workflow.conclusion === 'failure') {
+      return undefined;
+    }
+
+    return workflow;
   }
 
   /**
@@ -299,11 +308,7 @@ export default class Api {
       repo: this.repo,
       check_run_id,
       status,
-      conclusion,
-      output: {
-        title: job.name,
-        summary: `Forked from ${job.html_url}`
-      }
+      conclusion
     });
 
     return data;
