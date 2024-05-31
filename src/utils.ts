@@ -91,6 +91,5 @@ function deriveInputs(): IInputsAndJobs {
 
 export function sourceHtml(): string {
   const context = github.context;
-
   return `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 }
