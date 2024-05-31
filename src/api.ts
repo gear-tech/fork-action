@@ -274,15 +274,15 @@ export default class Api {
       );
     });
 
-    const workflow = runs[0];
+    const run = runs[0];
 
     // Here we allows re-trigger a new workflow if the previous one
     // is completed and not success.
-    if (workflow.status === 'completed' && workflow.conclusion === 'failure') {
+    if (run.status === 'completed' && run.conclusion === 'failure') {
       return undefined;
     }
 
-    return workflow;
+    return run;
   }
 
   /**

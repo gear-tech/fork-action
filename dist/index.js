@@ -29142,13 +29142,13 @@ class Api {
         const runs = workflow_runs.sort((a, b) => {
             return (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         });
-        const workflow = runs[0];
+        const run = runs[0];
         // Here we allows re-trigger a new workflow if the previous one
         // is completed and not success.
-        if (workflow.status === 'completed' && workflow.conclusion === 'failure') {
+        if (run.status === 'completed' && run.conclusion === 'failure') {
             return undefined;
         }
-        return workflow;
+        return run;
     }
     /**
      * Update a check run from jobs.
