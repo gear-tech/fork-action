@@ -276,8 +276,8 @@ export default class Api {
 
     const run = runs[0];
 
-    // Here we allows re-trigger a new workflow if the previous one
-    // is completed and not success.
+    // Here we re-trigger a new workflow if the previous one
+    // is completed and failure.
     if (run.status === 'completed' && run.conclusion === 'failure') {
       return undefined;
     }
