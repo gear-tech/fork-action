@@ -29221,6 +29221,7 @@ exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const api_1 = __importDefault(__nccwpck_require__(8229));
 const utils_1 = __nccwpck_require__(1314);
+const DEPBOT = 'dependabot';
 /**
  * The main function for the action.
  *
@@ -29229,6 +29230,8 @@ const utils_1 = __nccwpck_require__(1314);
 async function run() {
     try {
         const inputs = (0, utils_1.unpackInputs)();
+        if (inputs.ref.startsWith(DEPBOT))
+            return;
         const inputsJSON = JSON.stringify(inputs, null, 2);
         core.info(`Workflow inputs: ${inputsJSON}`);
         return await api_1.default.forkInputs(inputs);
