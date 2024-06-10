@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import Api from '@/api';
 import { unpackInputs } from '@/utils';
 
-const DEPBOT: string = 'dependabot';
+const DEPBOT = 'dependabot';
 
 /**
  * The main function for the action.
