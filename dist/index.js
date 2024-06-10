@@ -29230,9 +29230,8 @@ const DEPBOT = 'dependabot';
 async function run() {
     try {
         const inputs = (0, utils_1.unpackInputs)();
-        if (inputs.ref.startsWith(DEPBOT)) {
+        if (inputs.ref.startsWith(DEPBOT))
             return;
-        }
         const inputsJSON = JSON.stringify(inputs, null, 2);
         core.info(`Workflow inputs: ${inputsJSON}`);
         return await api_1.default.forkInputs(inputs);

@@ -12,9 +12,7 @@ const DEPBOT = 'dependabot';
 export async function run(): Promise<void> {
   try {
     const inputs = unpackInputs();
-    if (inputs.ref.startsWith(DEPBOT)) {
-      return;
-    }
+    if (inputs.ref.startsWith(DEPBOT)) return;
 
     const inputsJSON = JSON.stringify(inputs, null, 2);
     core.info(`Workflow inputs: ${inputsJSON}`);
