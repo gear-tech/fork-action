@@ -2,6 +2,8 @@ import * as core from '@actions/core';
 import Api from '@/api';
 import { unpackInputs } from '@/utils';
 
+const DEPBOT: string = 'dependabot';
+
 /**
  * The main function for the action.
  *
@@ -10,6 +12,10 @@ import { unpackInputs } from '@/utils';
 export async function run(): Promise<void> {
   try {
     const inputs = unpackInputs();
+    if (inputs.ref.startsWith(DEPBOT)) {
+      return;
+    }
+
     const inputsJSON = JSON.stringify(inputs, null, 2);
     core.info(`Workflow inputs: ${inputsJSON}`);
 
