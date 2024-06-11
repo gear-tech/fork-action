@@ -29143,9 +29143,15 @@ class Api {
             return (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         });
         const run = runs[0];
+        // There is a process running the check, skip
+        // dispatching new ones
+        if (run.status !== 'completed') {
+            core.info(`The check is running in progress: ${run.html_url}`);
+            process.exit(0);
+        }
         // Here we re-trigger a new workflow if the previous one
         // is completed and failure.
-        if (run.status === 'completed' && run.conclusion === 'failure') {
+        if (run.conclusion === 'failure') {
             return undefined;
         }
         return run;
