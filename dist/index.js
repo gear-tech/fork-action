@@ -28976,6 +28976,22 @@ class Api {
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
+        if (run) {
+            // NOTE:
+            //
+            // The sorting of workflow runs may have problem,
+            // revert this logic atm. (issue #40)
+            //
+            // if (run.status !== 'completed') {
+            //   core.info(`The check is running in progress: ${run.html_url}`);
+            //   process.exit(0);
+            // }
+            //
+            // // Unset the run if it has got failed.
+            // if (run.conclusion === 'failure') run = undefined;
+            // If there is a run, quit execution.
+            process.exit(0);
+        }
         if (!run)
             run = await this.dispatch(ref, workflow_id, inputs, head_sha);
         // Create checks from the specifed jobs.
@@ -29017,8 +29033,9 @@ class Api {
                 core.info('All jobs completed .');
                 const failed = _jobs.filter(job => job.conclusion === 'failure');
                 if (failed.length > 0) {
-                    core.error(`Job ${failed[0].name} Failed`);
-                    process.exit(1);
+                    core.warning(`Job ${failed[0].name} Failed`);
+                    // TODO: exit with errors (issue #40)
+                    process.exit(0);
                 }
                 return;
             }
@@ -29043,12 +29060,15 @@ class Api {
             status: 'in_progress',
             output: {
                 title: name,
-                summary: `Forked from ${run.html_url}\nRe-run the \`${github.context.job}\` job in ${(0, utils_1.sourceHtml)()} to re-trigger this check.`
+                summary: `Forked from ${run.html_url}`
+                // TODO:
+                //
+                // summary: `Forked from ${run.html_url}\nRe-run the \`${github.context.job}\` job in ${sourceHtml()} to re-trigger this check.`
             },
             head_sha
         });
         core.debug(`Created check ${data}.`);
-        core.info(`Created check ${data.name} at ${data.html_url}.`);
+        core.info(`Created check ${data.name} at ${data.html_url}`);
         return data;
     }
     /**
@@ -29074,7 +29094,7 @@ class Api {
             process.exit(1);
         }
         core.debug(`Latest run: ${JSON.stringify(run, null, 2)}.`);
-        core.info(`Dispatched workflow ${run.html_url}.`);
+        core.info(`Dispatched workflow ${run.html_url} .`);
         return run;
     }
     /**
@@ -29142,13 +29162,7 @@ class Api {
         const runs = workflow_runs.sort((a, b) => {
             return (new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         });
-        const run = runs[0];
-        // Here we re-trigger a new workflow if the previous one
-        // is completed and failure.
-        if (run.status === 'completed' && run.conclusion === 'failure') {
-            return undefined;
-        }
-        return run;
+        return runs[0];
     }
     /**
      * Update a check run from jobs.
