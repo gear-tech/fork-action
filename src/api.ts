@@ -158,13 +158,19 @@ export default class Api {
 
   /**
    * Ensure jobs have not been triggered yet
+   *
+   * NOTE: this function only works for `gear-tech/gear`
    */
   async ensureJobs(head_sha: string, filter: string[]) {
     const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
     if (!run) return;
 
-    const jobs = await this.getJobs(run.id, filter);
+    const jobs = await this.getJobs(
+      run.id,
+      filter.map(name => `build / ${name}`)
+    );
     if (jobs.length > 0) {
+      core.info(`${jobs.map(j => j.name)}`);
       core.info('Jobs have been processed in the PR workflow');
       process.exit(0);
     }
@@ -244,7 +250,11 @@ export default class Api {
    * @param {string[]} filter - Job names to be filtered out.
    * @returns {Promise<Job[]>} - Jobs of a workflow run.
    */
-  async getJobs(run_id: number, filter: string[]): Promise<Job[]> {
+  async getJobs(
+    run_id: number,
+    filter: string[],
+    strict = true
+  ): Promise<Job[]> {
     const {
       data: { jobs }
     } = await this.octokit.rest.actions.listJobsForWorkflowRun({
@@ -253,8 +263,6 @@ export default class Api {
       run_id
     });
 
-    core.info(`jobs: ${jobs.map(j => j.name)}`);
-    core.info(`${JSON.stringify(jobs)}`);
     if (jobs.length === 0) {
       core.setFailed(`No workflow is found from ${run_id}`);
       process.exit(1);
@@ -262,13 +270,14 @@ export default class Api {
 
     // Check if forked jobs are processed.
     const forkedJobs = jobs.filter(job => filter.includes(job.name));
+    if (!strict) return forkedJobs;
     if (forkedJobs.length < filter.length) {
       core.info(`Waiting for ${filter} ...`);
       await wait(5000);
       return await this.getJobs(run_id, filter);
     }
 
-    return jobs.filter(job => filter.includes(job.name));
+    return forkedJobs;
   }
 
   /**
