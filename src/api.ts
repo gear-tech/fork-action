@@ -17,7 +17,7 @@ import {
 } from '@/types';
 import { wait } from '@/utils';
 
-const PR_WORKFLOW_ID: string = '.github/workflows/PR.yml';
+const PR_WORKFLOW_ID = '.github/workflows/PR.yml';
 
 /**
  * API wrapper for the fork action and related usages.
@@ -161,7 +161,7 @@ export default class Api {
    *
    * NOTE: this function only works for `gear-tech/gear`
    */
-  async ensureJobs(head_sha: string, filter: string[]) {
+  async ensureJobs(head_sha: string, filter: string[]): Promise<void> {
     const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
     if (!run) return;
 
