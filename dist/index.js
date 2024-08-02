@@ -28975,7 +28975,7 @@ class Api {
      */
     async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
         // Ensure jobs have not been triggerd by the PR workflow
-        await this.ensureJobs(head_sha, jobs);
+        await this.ensureJobs(head_sha, jobs.map(job => `${prefix}${job}`));
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
@@ -29056,7 +29056,7 @@ class Api {
         const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
         if (!run)
             return;
-        const jobs = await this.getJobs(run.id, filter.map(name => `build / ${name}`), false);
+        const jobs = await this.getJobs(run.id, filter, false);
         if (jobs.length > 0) {
             const processed = jobs.map(j => j.name).join(' ');
             core.info(`${processed} have been processed in the PR workflow`);
