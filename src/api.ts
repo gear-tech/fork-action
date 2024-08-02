@@ -253,7 +253,8 @@ export default class Api {
       run_id
     });
 
-    core.info(`${jobs}`);
+    core.info(`jobs: ${jobs.map(j => j.name)}`);
+    core.info(`${JSON.stringify(jobs)}`);
     if (jobs.length === 0) {
       core.setFailed(`No workflow is found from ${run_id}`);
       process.exit(1);
