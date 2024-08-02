@@ -167,7 +167,8 @@ export default class Api {
 
     const jobs = await this.getJobs(
       run.id,
-      filter.map(name => `build / ${name}`)
+      filter.map(name => `build / ${name}`),
+      false
     );
     if (jobs.length > 0) {
       const processed = jobs.map(j => j.name).join(' ');
@@ -263,12 +264,6 @@ export default class Api {
       run_id
     });
 
-    if (jobs.length === 0) {
-      core.setFailed(`No workflow is found from ${run_id}`);
-      process.exit(1);
-    }
-
-    // Check if forked jobs are processed.
     const forkedJobs = jobs.filter(job => filter.includes(job.name));
     if (!strict) return forkedJobs;
     if (forkedJobs.length < filter.length) {

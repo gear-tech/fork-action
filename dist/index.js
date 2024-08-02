@@ -29056,7 +29056,7 @@ class Api {
         const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
         if (!run)
             return;
-        const jobs = await this.getJobs(run.id, filter.map(name => `build / ${name}`));
+        const jobs = await this.getJobs(run.id, filter.map(name => `build / ${name}`), false);
         if (jobs.length > 0) {
             const processed = jobs.map(j => j.name).join(' ');
             core.info(`${processed} have been processed in the PR workflow`);
@@ -29129,11 +29129,6 @@ class Api {
             repo: this.repo,
             run_id
         });
-        if (jobs.length === 0) {
-            core.setFailed(`No workflow is found from ${run_id}`);
-            process.exit(1);
-        }
-        // Check if forked jobs are processed.
         const forkedJobs = jobs.filter(job => filter.includes(job.name));
         if (!strict)
             return forkedJobs;
