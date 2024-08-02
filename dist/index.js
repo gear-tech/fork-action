@@ -29058,8 +29058,8 @@ class Api {
             return;
         const jobs = await this.getJobs(run.id, filter, false);
         if (jobs.length > 0) {
-            const processed = jobs.map(j => j.name).join(' ');
-            core.info(`${processed} have been processed in the PR workflow`);
+            const processed = jobs.map(j => j.name).join(',');
+            core.info(`[${processed}] have been processed in the PR workflow`);
             process.exit(0);
         }
     }
