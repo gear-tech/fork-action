@@ -29126,6 +29126,7 @@ class Api {
             repo: this.repo,
             run_id
         });
+        core.info(`${jobs}`);
         if (jobs.length === 0) {
             core.setFailed(`No workflow is found from ${run_id}`);
             process.exit(1);
