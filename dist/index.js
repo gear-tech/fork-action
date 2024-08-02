@@ -28989,6 +28989,8 @@ class Api {
             //
             // // Unset the run if it has got failed.
             // if (run.conclusion === 'failure') run = undefined;
+            core.info(`Got run ${run}`);
+            core.info(`Exiting execution ...`);
             // If there is a run, quit execution.
             process.exit(0);
         }
@@ -29044,6 +29046,13 @@ class Api {
             }
         }
     }
+    /**
+     * Ensure jobs have not been triggered yet
+     *
+     * @param {number} run_id - The workflow run id.
+     * @param {string[]} filter - Job names to be filtered out.
+     */
+    async ensureJobs(run_id, filter) { }
     /**
      * Create check with provided arguments.
      *
