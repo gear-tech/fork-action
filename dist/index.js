@@ -28941,6 +28941,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const utils_1 = __nccwpck_require__(1314);
+const PR_WORKFLOW_ID = '.github/workflows/PR.yml';
 /**
  * API wrapper for the fork action and related usages.
  */
@@ -28973,6 +28974,8 @@ class Api {
      * @returns {Promise<void>}
      */
     async fork({ ref, workflow_id, inputs, prefix, jobs, head_sha }) {
+        // Ensure jobs have not been triggerd by the PR workflow
+        await this.ensureJobs(head_sha, jobs);
         // If the workflow has already been dispatched, create
         // checks from the exist one.
         let run = await this.latestRun(workflow_id, head_sha);
@@ -28989,8 +28992,6 @@ class Api {
             //
             // // Unset the run if it has got failed.
             // if (run.conclusion === 'failure') run = undefined;
-            core.info(`Got run ${run}`);
-            core.info(`Exiting execution ...`);
             // If there is a run, quit execution.
             process.exit(0);
         }
@@ -29048,11 +29049,17 @@ class Api {
     }
     /**
      * Ensure jobs have not been triggered yet
-     *
-     * @param {number} run_id - The workflow run id.
-     * @param {string[]} filter - Job names to be filtered out.
      */
-    async ensureJobs(run_id, filter) { }
+    async ensureJobs(head_sha, filter) {
+        const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
+        if (!run)
+            return;
+        const jobs = await this.getJobs(run.id, filter);
+        if (jobs.length > 0) {
+            core.info('Jobs have been processed in the PR workflow');
+            process.exit(0);
+        }
+    }
     /**
      * Create check with provided arguments.
      *

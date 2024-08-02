@@ -17,6 +17,8 @@ import {
 } from '@/types';
 import { wait } from '@/utils';
 
+const PR_WORKFLOW_ID: string = '.github/workflows/PR.yml';
+
 /**
  * API wrapper for the fork action and related usages.
  */
@@ -59,6 +61,9 @@ export default class Api {
     jobs,
     head_sha
   }: ForkOptions): Promise<void> {
+    // Ensure jobs have not been triggerd by the PR workflow
+    await this.ensureJobs(head_sha, jobs);
+
     // If the workflow has already been dispatched, create
     // checks from the exist one.
     let run = await this.latestRun(workflow_id, head_sha);
@@ -76,8 +81,6 @@ export default class Api {
       // // Unset the run if it has got failed.
       // if (run.conclusion === 'failure') run = undefined;
 
-      core.info(`Got run ${run}`);
-      core.info(`Exiting execution ...`);
       // If there is a run, quit execution.
       process.exit(0);
     }
@@ -155,11 +158,17 @@ export default class Api {
 
   /**
    * Ensure jobs have not been triggered yet
-   *
-   * @param {number} run_id - The workflow run id.
-   * @param {string[]} filter - Job names to be filtered out.
    */
-  async ensureJobs(run_id: number, filter: string[]) {}
+  async ensureJobs(head_sha: string, filter: string[]) {
+    const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
+    if (!run) return;
+
+    const jobs = await this.getJobs(run.id, filter);
+    if (jobs.length > 0) {
+      core.info('Jobs have been processed in the PR workflow');
+      process.exit(0);
+    }
+  }
 
   /**
    * Create check with provided arguments.
