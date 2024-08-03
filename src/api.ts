@@ -17,6 +17,8 @@ import {
 } from '@/types';
 import { wait } from '@/utils';
 
+const PR_WORKFLOW_ID = '.github/workflows/PR.yml';
+
 /**
  * API wrapper for the fork action and related usages.
  */
@@ -59,6 +61,12 @@ export default class Api {
     jobs,
     head_sha
   }: ForkOptions): Promise<void> {
+    // Ensure jobs have not been triggerd by the PR workflow
+    await this.ensureJobs(
+      head_sha,
+      jobs.map(job => `${prefix}${job}`)
+    );
+
     // If the workflow has already been dispatched, create
     // checks from the exist one.
     let run = await this.latestRun(workflow_id, head_sha);
@@ -152,6 +160,23 @@ export default class Api {
   }
 
   /**
+   * Ensure jobs have not been triggered yet
+   *
+   * NOTE: this function only works for `gear-tech/gear`
+   */
+  async ensureJobs(head_sha: string, filter: string[]): Promise<void> {
+    const run = await this.latestRun(PR_WORKFLOW_ID, head_sha);
+    if (!run) return;
+
+    const jobs = await this.getJobs(run.id, filter, false);
+    if (jobs.length > 0) {
+      const processed = jobs.map(j => j.name).join(',');
+      core.info(`[${processed}] have been processed in the PR workflow`);
+      process.exit(0);
+    }
+  }
+
+  /**
    * Create check with provided arguments.
    *
    * @param {string} name - the name of the check run.
@@ -225,7 +250,11 @@ export default class Api {
    * @param {string[]} filter - Job names to be filtered out.
    * @returns {Promise<Job[]>} - Jobs of a workflow run.
    */
-  async getJobs(run_id: number, filter: string[]): Promise<Job[]> {
+  async getJobs(
+    run_id: number,
+    filter: string[],
+    strict = true
+  ): Promise<Job[]> {
     const {
       data: { jobs }
     } = await this.octokit.rest.actions.listJobsForWorkflowRun({
@@ -234,20 +263,15 @@ export default class Api {
       run_id
     });
 
-    if (jobs.length === 0) {
-      core.setFailed(`No workflow is found from ${run_id}`);
-      process.exit(1);
-    }
-
-    // Check if forked jobs are processed.
     const forkedJobs = jobs.filter(job => filter.includes(job.name));
+    if (!strict) return forkedJobs;
     if (forkedJobs.length < filter.length) {
       core.info(`Waiting for ${filter} ...`);
       await wait(5000);
       return await this.getJobs(run_id, filter);
     }
 
-    return jobs.filter(job => filter.includes(job.name));
+    return forkedJobs;
   }
 
   /**
