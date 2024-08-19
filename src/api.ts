@@ -126,7 +126,7 @@ export default class Api {
               core.debug(`No need to update check ${job.name} .`);
               return job;
             } else {
-              this.updateCheck(check.id, job);
+              await this.updateCheck(check.id, job);
               check.status =
                 job.status === 'waiting' ? 'in_progress' : job.status;
               check.conclusion = job.conclusion;
