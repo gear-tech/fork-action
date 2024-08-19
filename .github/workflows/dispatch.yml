@@ -17,6 +17,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dummy
-        run: |
-          echo "Hello, world"
-          exit 1
+        run: echo "Hello, world"
