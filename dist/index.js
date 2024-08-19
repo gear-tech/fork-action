@@ -29021,7 +29021,7 @@ class Api {
                     return job;
                 }
                 else {
-                    this.updateCheck(check.id, job);
+                    await this.updateCheck(check.id, job);
                     check.status =
                         job.status === 'waiting' ? 'in_progress' : job.status;
                     check.conclusion = job.conclusion;
